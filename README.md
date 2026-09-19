@@ -14,8 +14,50 @@
 
 ## 2. Dataset
 
-- Base: `application_train.csv` (Home Credit Default Risk, Kaggle)
-- Opcional complemento (el PDF pide agregar datasets adicionales): `bureau.csv` (historial crediticio externo) — refuerza caso de "inclusión financiera"
+Fuente: [Home Credit Default Risk (Kaggle)](https://www.kaggle.com/c/home-credit-default-risk/data). 8 tablas relacionadas por `SK_ID_CURR` (cliente) y `SK_ID_PREV`/`SK_ID_BUREAU` (créditos previos). Diccionario completo en `HomeCredit_columns_description.csv` (220 variables).
+
+### 2.1 Tabla central — `application_train.csv` / `application_test.csv`
+
+1 fila = 1 solicitud de crédito. `train`: 307,512 filas, 122 columnas (incluye `TARGET`). `test`: 48,745 filas, 121 columnas (sin `TARGET`, es lo que se predice).
+
+| Grupo | Variables clave | Descripción |
+|---|---|---|
+| Identificador | `SK_ID_CURR` | ID único del cliente/solicitud |
+| **Target** | `TARGET` | 1 = tuvo atraso >X días en primeras Y cuotas, 0 = pagó bien. Solo en train |
+| Datos del crédito | `NAME_CONTRACT_TYPE`, `AMT_CREDIT`, `AMT_ANNUITY`, `AMT_GOODS_PRICE` | tipo de préstamo (cash/revolving), monto, cuota, precio del bien |
+| Demográficos | `CODE_GENDER`, `CNT_CHILDREN`, `CNT_FAM_MEMBERS`, `NAME_FAMILY_STATUS`, `DAYS_BIRTH` | género, hijos, estado civil, edad (en días negativos desde hoy) |
+| Socioeconómicos | `AMT_INCOME_TOTAL`, `NAME_INCOME_TYPE`, `NAME_EDUCATION_TYPE`, `OCCUPATION_TYPE`, `ORGANIZATION_TYPE`, `DAYS_EMPLOYED` | ingreso, tipo empleo, educación, antigüedad laboral — **clave para caso "informales"** |
+| Vivienda/activos | `FLAG_OWN_CAR`, `FLAG_OWN_REALTY`, `NAME_HOUSING_TYPE`, `OWN_CAR_AGE`, bloque `APARTMENTS_*`/`BASEMENTAREA_*`/etc. (~40 cols normalizadas sobre el edificio donde vive) | patrimonio, condición de vivienda |
+| Contacto/dirección | `FLAG_MOBIL`, `FLAG_EMAIL`, `FLAG_PHONE`, `REG_REGION_NOT_LIVE_REGION`, `REG_CITY_NOT_LIVE_CITY`, etc. | qué canales dio, si dirección registrada ≠ dirección real (señal de riesgo) |
+| Scoring externo | `EXT_SOURCE_1/2/3` | scores normalizados de otras fuentes (bureaus externos) — variables más predictivas del dataset |
+| Círculo social | `OBS_30/60_CNT_SOCIAL_CIRCLE`, `DEF_30/60_CNT_SOCIAL_CIRCLE` | cuántos contactos del cliente tuvieron default — dato sensible/controversial (usa red social como proxy de riesgo) |
+| Documentos | `FLAG_DOCUMENT_2` … `FLAG_DOCUMENT_21` | qué documentos presentó (flags binarios) |
+| Consultas bureau | `AMT_REQ_CREDIT_BUREAU_HOUR/DAY/WEEK/MON/QRT/YEAR` | cuántas veces consultaron su historial en bureau antes de esta solicitud |
+
+### 2.2 Tablas satélite (historial — opcional para enriquecer, no obligatorio)
+
+| Tabla | Filas | Grano | Qué aporta |
+|---|---|---|---|
+| `bureau.csv` | 1.72M | 1 crédito externo (bureau) por fila, join por `SK_ID_CURR` | historial crediticio en otras entidades: `CREDIT_ACTIVE`, `AMT_CREDIT_SUM`, `AMT_CREDIT_SUM_DEBT`, `CREDIT_DAY_OVERDUE`, `CREDIT_TYPE` |
+| `bureau_balance.csv` | 27.3M | 1 mes de un crédito bureau, join por `SK_ID_BUREAU` | `STATUS` mensual (al día, DPD 1-30, 31-60...120+, cerrado) |
+| `previous_application.csv` | 1.67M | 1 solicitud previa en Home Credit, join por `SK_ID_CURR` | `NAME_CONTRACT_STATUS` (aprobado/rechazado/cancelado), `CODE_REJECT_REASON`, montos previos |
+| `POS_CASH_balance.csv` | 10.0M | 1 mes de un crédito POS/cash previo | `SK_DPD` (días de atraso), cuotas restantes |
+| `credit_card_balance.csv` | 3.84M | 1 mes de una tarjeta de crédito previa | balance, límite, retiros de cajero, pagos |
+| `installments_payments.csv` | 13.6M | 1 cuota pagada/programada | monto programado vs pagado, fecha programada vs real |
+
+Relación: `application` 1—N `previous_application` 1—N (`POS_CASH_balance`, `credit_card_balance`, `installments_payments`); `application` 1—N `bureau` 1—N `bureau_balance`.
+
+**Para el proyecto**: usar `application_train.csv` como base obligatoria (ya trae `TARGET` y variables suficientes para scoring + caso de negocio). `bureau.csv` es el complemento natural si se quiere mostrar "historial externo" en el dashboard/informe — no hace falta tocar las tablas de mayor volumen (`bureau_balance`, `installments_payments`, etc.) salvo que sobre tiempo.
+
+### 2.3 Variables sensibles (mapeo directo a sección 4 — seguridad)
+
+| Categoría | Variables | Tratamiento sugerido |
+|---|---|---|
+| PII directa/cuasi-identificador | `SK_ID_CURR`, `DAYS_BIRTH`, `CODE_GENDER`, dirección (`REGION_*`, `REG_CITY_*`) | cifrado columna (AES-256) o pseudonimización |
+| Financiera sensible | `AMT_INCOME_TOTAL`, `AMT_CREDIT`, `AMT_ANNUITY`, todo `bureau.csv` (deudas externas) | cifrado en reposo, acceso solo rol analista/admin |
+| Socioeconómica/discriminación potencial | `NAME_EDUCATION_TYPE`, `OCCUPATION_TYPE`, `NAME_HOUSING_TYPE`, `OBS/DEF_*_SOCIAL_CIRCLE` | ojo con sesgo/discriminación indirecta si el modelo las pondera fuerte — mencionar en informe (ética del scoring) |
+| Comportamiento/histórico pago | `installments_payments`, `POS_CASH_balance`, `credit_card_balance` (`SK_DPD`) | logs de auditoría si se consultan, retención limitada |
+
 - Dataset adicional sugerido fuera de Kaggle: contexto Perú (ej. INEI empleo informal, o tasas SBS) para justificar el caso de negocio local — no necesita ser grande, solo contexto/narrativa en el informe
 
 ## 3. Arquitectura técnica (requerimiento: DB + front + backend)
