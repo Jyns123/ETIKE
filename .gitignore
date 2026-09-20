@@ -1,0 +1,10 @@
+# datasets crudos y limpios (pesan cientos de MB, no van a git)
+home-credit-default-risk/*.csv
+home-credit-default-risk/clean/
+
+# archivos del sistema / R
+.DS_Store
+.Rhistory
+
+# secretos del pipeline
+pipeline/.env
