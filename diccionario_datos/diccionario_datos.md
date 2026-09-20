@@ -172,7 +172,7 @@ application_train / application_test
      bureau.csv
 ```
 
-Un cliente sin ninguna fila en bureau.csv = cliente **sin historial crediticio externo** (el "informal" del caso de negocio). Ese es el campo derivado clave: tiene_historial_bureau = EXISTS(SELECT 1 FROM bureau WHERE SK_ID_CURR = ...), ya está implementado así en pipeline/transform_core.py.
+Un cliente sin ninguna fila en bureau.csv = cliente **sin historial crediticio externo** (el "informal" del caso de negocio). Ese es el campo derivado clave: tiene_historial_bureau = EXISTS(SELECT 1 FROM bureau WHERE SK_ID_CURR = ...), ya está implementado así en pipeline/transform_core.py. Para visualizar los csv: https://drive.google.com/drive/folders/1e9X8ikC5TM1bVNPe4RW-zgnNdX6wvVqt?usp=sharing
 
 ## 4. Notas prácticas para empezar a explorar
 
