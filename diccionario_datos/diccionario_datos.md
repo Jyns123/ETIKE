@@ -130,6 +130,8 @@ Implicación práctica: no basta con sacar las variables "obvias" (género, edad
 | AMT_REQ_CREDIT_BUREAU_QRT | numérica | Ídem, 3 meses antes | — |
 | AMT_REQ_CREDIT_BUREAU_YEAR | numérica | Ídem, 1 año antes | — |
 
+> **Nota:** cada vez que una entidad financiera evalúa a un cliente, consulta su historial en el buró de crédito, y esa consulta queda registrada. Estas 6 columnas cuentan cuántas consultas hubo sobre este cliente, agrupadas por qué tan cerca en el tiempo fueron respecto a esta solicitud (última hora, último día, semana, mes, trimestre, año). Ejemplo: AMT_REQ_CREDIT_BUREAU_MON = 3 significa que en el mes previo a esta solicitud, 3 entidades distintas ya habían consultado su historial. Muchas consultas seguidas en poco tiempo suele ser señal de alerta de riesgo (cliente pidiendo crédito en varios lados a la vez, posible necesidad urgente de plata).
+
 ---
 
 ## 2. bureau.csv
