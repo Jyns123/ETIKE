@@ -1,6 +1,6 @@
-# Diccionario de Datos: Post-limpieza (clean/)
+# Diccionario de Datos: Post-limpieza (dataset/)
 
-Este documento describe el estado FINAL de las variables después de aplicar notebooks/limpieza_datos.ipynb. Corresponde a los archivos home-credit-default-risk/clean/application_train_clean.csv (80 columnas) y home-credit-default-risk/clean/bureau_clean.csv (18 columnas), los que alimentan el pipeline hacia la base de datos (pipeline/load_raw.py).
+Este documento describe el estado FINAL de las variables después de aplicar notebooks/limpieza_datos.ipynb. Corresponde a los archivos dataset/application_train_clean.csv (80 columnas) y dataset/bureau_clean.csv (18 columnas), los que alimentan el pipeline hacia la base de datos (pipeline/load_raw.py).
 
 Para el significado original de cada variable (antes de limpiar), ver diccionario_datos.md. Aquí solo se documenta qué cambió y el estado final de cada columna.
 

@@ -1,6 +1,6 @@
 # datasets crudos y limpios (pesan cientos de MB, no van a git)
 home-credit-default-risk/*.csv
-home-credit-default-risk/clean/
+dataset/*.csv
 
 # archivos del sistema / R
 .DS_Store
@@ -8,3 +8,7 @@ home-credit-default-risk/clean/
 
 # secretos del pipeline
 pipeline/.env
+
+# bytecode compilado de Python
+__pycache__/
+*.pyc
