@@ -49,6 +49,8 @@ Implicación práctica: no basta con sacar las variables "obvias" (género, edad
 | NAME_FAMILY_STATUS | categórica | Estado civil | Medio |
 | NAME_TYPE_SUITE | categórica | Quién acompañó al cliente al solicitar | — |
 
+> **DAYS_BIRTH, nota (anonimización):** en vez de guardar la fecha de nacimiento real, se guarda una duración (días desde que nació hasta el día de esta solicitud). Esto es anonimización real, no solo cosmética: se pierde la fecha calendario absoluta (no se puede saber en qué año nació sin saber también cuándo solicitó, dato que tampoco está como fecha real), y cada fila usa su propio "día 0" (el día en que ESA persona solicitó), así que dos personas con el mismo DAYS_BIRTH pueden haber nacido en años distintos. La edad relativa se conserva (útil para el modelo), pero se rompe el vínculo directo con una fecha real identificable. Mismo principio aplica a DAYS_EMPLOYED, DAYS_REGISTRATION, DAYS_ID_PUBLISH y DAYS_LAST_PHONE_CHANGE.
+
 ### 1.4 Socioeconómicos (clave para el caso "informales")
 
 | Variable | Tipo | Descripción | Sensible |
