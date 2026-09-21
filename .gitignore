@@ -12,3 +12,9 @@ pipeline/.env
 # bytecode compilado de Python
 __pycache__/
 *.pyc
+
+# web: secretos, certificados (llaves privadas) y artefactos de build
+web/backend/.env
+web/certs/
+web/frontend/node_modules/
+web/frontend/dist/
