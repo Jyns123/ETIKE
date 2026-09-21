@@ -59,7 +59,7 @@ def banda_de(modelo: dict, score: int) -> dict:
 # --------------------------------------------------------------------------
 
 def _fmt_monto(x: float) -> str:
-    return f"{x:,.0f}".replace(",", " ")
+    return f"{x:,.0f}"  # 262,935: mismo formato que Intl es-PE en el front
 
 
 def _fmt_tiempo(anios: float) -> str:

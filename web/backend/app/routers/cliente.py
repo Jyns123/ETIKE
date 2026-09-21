@@ -165,7 +165,8 @@ def comunidad(request: Request, u: dict = Depends(solo_cliente)):
         "vecinos": sorted(
             (dict(alias=alias_de(v["sk_id_curr"]), score_aprox=int(round(v["score"], -1)), banda=v["banda"],
                   tiene_historial=v["tiene_historial"],
-                  ingreso_cifrado=bytes(v["ingreso_cifrado"])[8:40].hex(),
+                  # desde el byte 18: antes van cabeceras OpenPGP que se repiten entre filas
+                  ingreso_cifrado=bytes(v["ingreso_cifrado"])[18:50].hex(),
                   algoritmo=algoritmo_pgp(bytes(v["ingreso_cifrado"])))
              for v in vecinos),
             key=lambda x: x["score_aprox"],
