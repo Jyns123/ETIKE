@@ -120,3 +120,17 @@ Ejemplos a listar y justificar: MFA para analistas, cifrado homomórfico para sc
 5. Meter capa de seguridad (cifrado, roles, logs, TLS)
 6. Front mínimo conectado
 7. Escribir informe en paralelo (no dejar para el final)
+
+## 11. Qué hay implementado en este repo
+
+| Carpeta | Contenido |
+|---|---|
+| `notebooks/` | EDA y limpieza (`limpieza_datos.ipynb`), genera los csv limpios |
+| `dataset/` | Los 2 csv limpios (se descargan del Drive, no van a git) |
+| `diccionario_datos/` | Diccionario de la data cruda y de la limpia |
+| `pipeline/` | csv → Postgres: `raw` (copia fiel), `core` (cifrado con pgcrypto) y el scorecard transparente (`core.scores`). Ver `pipeline/README.md` |
+| `web/` | Panel del cliente (React + D3 + FastAPI): score explicado, sugerencias, simulador, comparación anónima, login seguro, auditoría y TLS con CA propia. Ver `web/README.md` |
+
+Orden para levantar todo: descargar los csv → `pipeline/README.md` (pasos 1 a 3) → `web/README.md`.
+
+Resultados del scorecard (con los datos limpios): AUC 0.725 sin variables sensibles vs 0.739 de un modelo tradicional que sí las usa; a igual tasa de aprobación global (75%), aprueba al 67.3% de los clientes sin historial en bureau vs 64.3% (KPI de reducción de exclusión financiera de la sección 1).
