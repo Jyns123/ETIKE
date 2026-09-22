@@ -284,4 +284,21 @@ Tablas que crea:
 | `core.modelo_scorecard` | Definición del modelo en JSONB (tramos, puntos, métricas, variables excluidas y por qué). No es secreta. |
 | `core.scores` | 1 fila por cliente: score, banda, apto, puntos por pilar. El detalle (valores de cada factor, ingreso, montos) va en `detalle_cifrado`, cifrado con `pgp_sym_encrypt(..., 'cipher-algo=aes256')`. |
 
-> Nota sobre el algoritmo: `pgp_sym_encrypt` sin opciones usa **AES-128** (se ve en el 4º byte del cifrado: `c30d0407…` = AES-128, `c30d0409…` = AES-256). `transform_core.py` hoy cifra ingreso, nacimiento y deuda con el default; para cumplir el AES-256 de la guía basta con agregar el tercer argumento `'cipher-algo=aes256'`.
+> Nota sobre el algoritmo: `pgp_sym_encrypt` sin opciones usa AES-128 (se ve en el 4º byte del cifrado: `c30d0407…` = AES-128, `c30d0409…` = AES-256). `transform_core.py` y `score_model.py` cifran ingreso, nacimiento, deuda y el detalle del score con el tercer argumento `'cipher-algo=aes256'`, así que todo queda en AES-256.
+
+---
+
+## Backup y continuidad (`backup_db.py`)
+
+```bash
+python backup_db.py                              # backup + purga los de más de 7 días
+python backup_db.py --restore backups/archivo.dump
+```
+
+`pg_dump` en formato custom (comprimido, restaurable con `pg_restore`), guardado en `backups/` en la raíz del repo (no va a git, pesa como la BD: ~490 MB con el dataset completo). Retención: 7 días, configurable en `RETENCION_DIAS` dentro del script.
+
+Si `pg_dump`/`pg_restore` del PATH no coinciden con la versión del servidor (típico con dos Postgres instalados, ej. Homebrew + instalador EDB en Mac: `pg_dump: error: server version: 16.0; pg_dump version: 14.17`), setear `PG_BIN_DIR` en el `.env` apuntando a la carpeta bin correcta (ver `.env.example`).
+
+**RTO/RPO** (corriendo el backup 1 vez al día, ej. con cron a las 3am — comando de ejemplo dentro de `backup_db.py`):
+- RPO ≈ 24 h: como mucho se pierde lo cargado/calculado desde el último backup.
+- RTO ≈ minutos: restaurar un dump de este tamaño con `pg_restore` toma unos minutos, no horas (probado: backup + restore completo a una BD nueva, íntegro).
