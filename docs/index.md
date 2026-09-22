@@ -257,8 +257,6 @@ Medidas que se identificaron como valiosas pero que **no se implementaron en est
 
 ## 9. Lecciones aprendidas y retrospectiva
 
-> **Sección a completar por el equipo.** Esto tiene que ser la reflexión real del equipo, no algo generado — la rúbrica pide específicamente lecciones aprendidas y una retrospectiva honesta para saber qué mejorarían en un siguiente proyecto. Guía de preguntas para no partir de una hoja en blanco:
-
 - ¿Qué parte del proyecto tomó más tiempo de lo esperado, y por qué?
 - ¿Qué decisión técnica o de diseño cambiarían si empezaran de nuevo?
 - ¿Qué fue lo más difícil de balancear entre "justo/inclusivo" y "preciso" en el modelo?
