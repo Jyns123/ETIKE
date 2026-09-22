@@ -130,7 +130,18 @@ Ejemplos a listar y justificar: MFA para analistas, cifrado homomórfico para sc
 | `diccionario_datos/` | Diccionario de la data cruda y de la limpia |
 | `pipeline/` | csv → Postgres: `raw` (copia fiel), `core` (cifrado con pgcrypto) y el scorecard transparente (`core.scores`). Ver `pipeline/README.md` |
 | `web/` | Panel del cliente (React + D3 + FastAPI): score explicado, sugerencias, simulador, comparación anónima, login seguro, auditoría y TLS con CA propia. Ver `web/README.md` |
+| `docs/` | Informe escrito del proyecto (GitHub Pages). Ver sección siguiente |
 
 Orden para levantar todo: descargar los csv → `pipeline/README.md` (pasos 1 a 3) → `web/README.md`.
 
-Resultados del scorecard (con los datos limpios): AUC 0.725 sin variables sensibles vs 0.739 de un modelo tradicional que sí las usa; a igual tasa de aprobación global (75%), aprueba al 67.3% de los clientes sin historial en bureau vs 64.3% (KPI de reducción de exclusión financiera de la sección 1).
+Resultados del scorecard (con los datos limpios): AUC 0.725 sin variables sensibles vs 0.739 de un modelo tradicional que sí las usa; a igual tasa de aprobación global, aprueba al 67.3% de los clientes sin historial en bureau vs 65.0% (KPI de reducción de exclusión financiera de la sección 1).
+
+## 12. Informe escrito
+
+El informe completo del proyecto (motivación, trasfondo teórico, requerimientos, diseño, implementación, plan de respuesta a incidentes, recomendaciones futuras y retrospectiva) está en `docs/index.md`, pensado para publicarse con **GitHub Pages**:
+
+1. En GitHub: `Settings` → `Pages` → `Build and deployment` → `Deploy from a branch`
+2. Branch: la que corresponda (ej. `main`, después de mergear) → carpeta `/docs`
+3. `Save`. GitHub publica en `https://<usuario>.github.io/ETIKE/` (tarda 1-2 min la primera vez)
+
+Mientras tanto, se puede leer directo en el repo: [`docs/index.md`](docs/index.md).
