@@ -2,3 +2,4 @@ pandas
 psycopg2-binary
 numpy
 scikit-learn
+pytest
