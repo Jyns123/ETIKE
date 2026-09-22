@@ -9,6 +9,9 @@ dataset/*.csv
 # secretos del pipeline
 pipeline/.env
 
+# backups de la BD (pesan cientos de MB, no van a git)
+backups/
+
 # bytecode compilado de Python
 __pycache__/
 *.pyc
