@@ -62,6 +62,8 @@ export const ACCIONES_INTERNAS: Record<string, string> = {
   VER_COMUNIDAD: "Vio la comparación anónima",
   VER_RESUMEN_INTERNO: "Vio indicadores internos",
   VER_AUDITORIA: "Vio el registro de auditoría",
+  VER_SOLICITUDES: "Vio la lista de solicitudes",
+  DECISION_SOLICITUD: "Decidió sobre una solicitud",
 };
 
 export function fechaHora(iso: string) {

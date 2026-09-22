@@ -155,6 +155,18 @@ export interface Actividad {
   quien: string;
 }
 
+export interface SolicitudInterna {
+  id: string;
+  alias: string;
+  score: number;
+  banda: string;
+  apto: boolean;
+  tiene_historial: boolean;
+  estado: "pendiente" | "aprobada" | "rechazada";
+  decidido_en: string | null;
+  decidido_por: string | null;
+}
+
 export interface Sesion {
   usuario: string;
   rol: "cliente" | "analista" | "admin";

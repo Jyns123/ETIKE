@@ -46,6 +46,22 @@ CREATE TABLE IF NOT EXISTS app.logs_auditoria (
 CREATE INDEX IF NOT EXISTS idx_logs_usuario ON app.logs_auditoria (usuario_id, ts DESC);
 CREATE INDEX IF NOT EXISTS idx_logs_objetivo ON app.logs_auditoria (sk_id_curr_objetivo, ts DESC);
 
+-- Decision del analista/admin sobre una solicitud (aprobar/rechazar). Se
+-- referencia por el UUID propio de core.solicitudes (no por sk_id_curr, que
+-- nunca sale hacia el front): analista solo ve el alias pseudonimizado y el
+-- score, nunca el identificador real ni datos descifrados del cliente. Sin
+-- fila = solicitud pendiente; decidir de nuevo pisa la decision anterior
+-- (el historial completo de quien cambio que y cuando queda en logs_auditoria).
+CREATE TABLE IF NOT EXISTS app.decisiones (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    solicitud_id UUID NOT NULL UNIQUE REFERENCES core.solicitudes (id),
+    estado TEXT NOT NULL CHECK (estado IN ('aprobada', 'rechazada')),
+    decidido_por UUID NOT NULL REFERENCES app.usuarios (id),
+    decidido_en TIMESTAMPTZ NOT NULL DEFAULT now(),
+    motivo TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_decisiones_solicitud ON app.decisiones (solicitud_id);
+
 -- ---------------------------------------------------------------------------
 -- Permisos del rol de la app (minimo privilegio). El rol se crea en
 -- init_app_db.py porque su contrasenia viene del .env.
@@ -54,14 +70,17 @@ REVOKE ALL ON SCHEMA raw FROM etike_app;      -- nunca ve datos en claro del pip
 GRANT USAGE ON SCHEMA core, app TO etike_app;
 
 -- core: solo lectura, y en solicitudes solo las columnas que la web muestra
+-- ("id" es el UUID propio de la fila: se usa como identificador de solicitud
+-- hacia el panel interno para no exponer nunca el sk_id_curr real)
 GRANT SELECT ON core.scores, core.modelo_scorecard TO etike_app;
-GRANT SELECT (sk_id_curr, ingreso_cifrado, fecha_nacimiento_cifrada) ON core.solicitudes TO etike_app;
+GRANT SELECT (id, sk_id_curr, ingreso_cifrado, fecha_nacimiento_cifrada) ON core.solicitudes TO etike_app;
 
 -- app: la auditoria es de solo agregar (sin UPDATE ni DELETE)
 GRANT SELECT, INSERT, UPDATE ON app.usuarios TO etike_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON app.sesiones TO etike_app;
 GRANT SELECT, INSERT ON app.logs_auditoria TO etike_app;
 GRANT USAGE ON SEQUENCE app.logs_auditoria_id_seq TO etike_app;
+GRANT SELECT, INSERT, UPDATE ON app.decisiones TO etike_app;
 
 -- la llave de cifrado viaja en el texto de las consultas (pgp_sym_decrypt):
 -- se evita que Postgres escriba esas consultas en su log si fallan

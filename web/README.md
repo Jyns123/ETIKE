@@ -67,7 +67,7 @@ Todas usan la contraseña que imprime `seed_users.py`.
 | `demo.apto`, `demo.bueno`, `demo.excelente` | Distintas bandas por encima del umbral |
 | `demo.pension` | Pensionado, sin empleo actual |
 | `demo.riesgo` | Riesgo alto |
-| `analista` | Panel interno: indicadores agregados |
+| `analista` | Panel interno: indicadores agregados + aprobar/rechazar solicitudes |
 | `admin` | Panel interno + registro de auditoría |
 
 ## Qué muestra la página
@@ -95,7 +95,8 @@ Todas usan la contraseña que imprime `seed_users.py`.
 | Pseudonimización | Otros clientes se ven como `CF-XXXX-XXXX` (HMAC-SHA256 con llave del servidor), score redondeado a decenas (`routers/cliente.py`) |
 | Mínimo privilegio | Rol `etike_app`: sin acceso a `raw`, SELECT por columna en `core.solicitudes`, auditoría solo INSERT (`sql/app_schema.sql`) |
 | Auditoría | Cada login, lectura y descifrado queda en `app.logs_auditoria` (quién, cuándo, qué, IP, resultado); el cliente ve los suyos y el admin todos |
-| RBAC | `cliente` (su score), `analista` (agregados), `admin` (agregados + auditoría) (`requiere_rol` en `app/security.py`) |
+| RBAC | `cliente` (su score), `analista` (agregados + decidir solicitudes), `admin` (agregados + auditoría) (`requiere_rol` en `app/security.py`) |
+| Decisión de solicitudes | `analista`/`admin` aprueban/rechazan viendo solo alias pseudonimizado y score, nunca `sk_id_curr` ni datos descifrados (`routers/interno.py`, tabla `app.decisiones`) |
 | Llave en logs | La llave de pgcrypto viaja en el texto SQL: el rol tiene `log_min_error_statement = panic` para que Postgres no la escriba en su log |
 
 ## Notas
