@@ -80,7 +80,7 @@ El mercado que hoy atiende a este segmento convive con una morosidad del 4,7% al
 | | Accesos a datos personales auditados | 100% | 100% (cada endpoint registra, sección 6.6) |
 | | Controles de seguridad con prueba automatizada | Todos los de la sección 3.2 | 51 pruebas, 51 de 51 pasan |
 | | Recuperación ante desastre | RPO ≤ 24 h, RTO ≤ 1 h | Backup en 35 s; restauración completa y verificada en **16 s** |
-| **O2. Incluir a quien el sistema tradicional deja fuera** | Aprobación de solicitantes sin historial | ≥ modelo tradicional + 2 pp | 67,3% vs 64,3% (**+3,0 pp**) |
+| **O2. Incluir a quien el sistema tradicional deja fuera** | Aprobación de solicitantes sin historial | ≥ modelo tradicional + 2 pp | 67,3% vs 65,0% (**+2,3 pp**) |
 | **O3. Riesgo sostenible** | Atrasos entre aprobados | ≤ 10% (SBS MYPE: 4,7–6,2%) | **5,0%** (población: 8,07%) |
 | | AUC sin variables sensibles | ≥ 0,72, costo ≤ 0,02 | 0,725 vs 0,739 (costo 0,014) |
 | **O4. Decisión inmediata y explicable** | Tiempo de respuesta del score explicado | < 1 s (la banca tradicional tarda días) | 35 ms de mediana (p95: 46 ms) |
