@@ -134,14 +134,13 @@ Ejemplos a listar y justificar: MFA para analistas, cifrado homomórfico para sc
 
 Orden para levantar todo: descargar los csv → `pipeline/README.md` (pasos 1 a 3) → `web/README.md`.
 
-Resultados del scorecard (con los datos limpios): AUC 0.725 sin variables sensibles vs 0.739 de un modelo tradicional que sí las usa; a igual tasa de aprobación global, aprueba al 67.3% de los clientes sin historial en bureau vs 65.0% (KPI de reducción de exclusión financiera de la sección 1).
+Resultados del scorecard (con los datos limpios): AUC 0.725 sin variables sensibles vs 0.739 de un modelo tradicional que sí las usa; a igual tasa de aprobación global, aprueba al 67.3% de los clientes sin historial en bureau vs 64.3% (KPI de reducción de exclusión financiera de la sección 1). Fuente de verdad de estas cifras: `core.modelo_scorecard` (`definicion -> 'comparacion'`).
 
-## 12. Informe escrito
+## 12. Informe escrito y demo (GitHub Pages)
 
-El informe completo del proyecto (motivación, trasfondo teórico, requerimientos, diseño, implementación, plan de respuesta a incidentes, recomendaciones futuras y retrospectiva) está en `docs/index.md`, pensado para publicarse con **GitHub Pages**:
+Publicado en **https://jyns123.github.io/ETIKE/**:
 
-1. En GitHub: `Settings` → `Pages` → `Build and deployment` → `Deploy from a branch`
-2. Branch: la que corresponda (ej. `main`, después de mergear) → carpeta `/docs`
-3. `Save`. GitHub publica en `https://<usuario>.github.io/ETIKE/` (tarda 1-2 min la primera vez)
+- `/`: el informe completo (motivación, trasfondo teórico, requerimientos, diseño, implementación, plan de respuesta a incidentes, recomendaciones futuras, planificación y retrospectiva). Fuente: [`docs/index.md`](docs/index.md) (Jekyll).
+- `/demo/`: versión estática del panel, sin backend: respuestas reales del backend exportadas para las cuentas demo (contraseña `demo`). Ver `web/README.md`, "Demo estática".
 
-Mientras tanto, se puede leer directo en el repo: [`docs/index.md`](docs/index.md).
+Lo publica el workflow [`.github/workflows/pages.yml`](.github/workflows/pages.yml) en cada push a `main` (en un PR solo compila). En `Settings` → `Pages` la fuente debe ser **GitHub Actions**.

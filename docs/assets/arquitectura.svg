@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 490" width="960" height="490" role="img" aria-labelledby="t d" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <title id="t">Arquitectura de CrediFácil</title>
+  <desc id="d">El navegador habla por HTTPS con el backend FastAPI, que se conecta a PostgreSQL con un rol de mínimo privilegio. PostgreSQL tiene tres schemas: raw (sin acceso para la app), core (columnas cifradas con pgcrypto) y app (usuarios, sesiones y auditoría). El pipeline en Python carga los CSV y un script diario genera backups.</desc>
+  <defs>
+    <marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#52514e"/>
+    </marker>
+    <marker id="fla" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2a78d6"/>
+    </marker>
+  </defs>
+  <rect width="960" height="490" fill="#ffffff"/>
+
+  <!-- navegador -->
+  <rect x="20" y="50" width="210" height="150" rx="12" fill="#f3f2ee" stroke="#c3c2b7"/>
+  <text x="36" y="80" font-size="15" font-weight="700" fill="#0b0b0b">Navegador</text>
+  <text x="36" y="104" font-size="12" fill="#52514e">React + D3 + Motion</text>
+  <text x="36" y="126" font-size="12" fill="#52514e">Cookie de sesión __Host-</text>
+  <text x="36" y="144" font-size="12" fill="#52514e">HttpOnly · Secure</text>
+  <text x="36" y="162" font-size="12" fill="#52514e">SameSite=Strict</text>
+  <text x="36" y="184" font-size="12" fill="#52514e">Sin tokens en localStorage</text>
+
+  <!-- transporte -->
+  <line x1="232" y1="125" x2="338" y2="125" stroke="#2a78d6" stroke-width="2.5" marker-end="url(#fla)" marker-start="url(#fla)"/>
+  <text x="285" y="112" font-size="12" font-weight="700" fill="#2a78d6" text-anchor="middle">HTTPS</text>
+  <text x="285" y="146" font-size="11" fill="#52514e" text-anchor="middle">TLS 1.2+</text>
+  <text x="285" y="161" font-size="11" fill="#52514e" text-anchor="middle">CA propia</text>
+  <text x="285" y="176" font-size="11" fill="#52514e" text-anchor="middle">ECDSA P-256</text>
+
+  <!-- backend -->
+  <rect x="340" y="50" width="240" height="150" rx="12" fill="#f3f2ee" stroke="#c3c2b7"/>
+  <text x="356" y="80" font-size="15" font-weight="700" fill="#0b0b0b">Backend FastAPI</text>
+  <text x="356" y="104" font-size="12" fill="#52514e">Argon2id · bloqueo tras 5 fallos</text>
+  <text x="356" y="124" font-size="12" fill="#52514e">RBAC: cliente / analista / admin</text>
+  <text x="356" y="144" font-size="12" fill="#52514e">Anti-CSRF (Origin) · CSP · HSTS</text>
+  <text x="356" y="164" font-size="12" fill="#52514e">Sin IDs en la URL (anti-IDOR)</text>
+  <text x="356" y="184" font-size="12" fill="#52514e">Audita cada acceso</text>
+
+  <!-- backend -> postgres -->
+  <line x1="582" y1="125" x2="668" y2="125" stroke="#52514e" stroke-width="2" marker-end="url(#fl)"/>
+  <text x="625" y="112" font-size="11" fill="#52514e" text-anchor="middle">rol</text>
+  <text x="625" y="146" font-size="11" font-weight="700" fill="#0b0b0b" text-anchor="middle">etike_app</text>
+  <text x="625" y="161" font-size="11" fill="#52514e" text-anchor="middle">mínimo</text>
+  <text x="625" y="176" font-size="11" fill="#52514e" text-anchor="middle">privilegio</text>
+
+  <!-- postgres -->
+  <rect x="670" y="20" width="270" height="340" rx="14" fill="#fcfcfb" stroke="#52514e" stroke-width="1.5"/>
+  <text x="686" y="46" font-size="15" font-weight="700" fill="#0b0b0b">PostgreSQL 16</text>
+
+  <rect x="686" y="60" width="238" height="78" rx="10" fill="#fdecec" stroke="#e34948"/>
+  <text x="700" y="82" font-size="13" font-weight="700" fill="#0b0b0b">raw</text>
+  <text x="736" y="82" font-size="12" fill="#52514e">copia fiel de los CSV</text>
+  <text x="700" y="102" font-size="12" fill="#a6431c">datos en claro</text>
+  <text x="700" y="122" font-size="12" font-weight="700" fill="#a6431c">la app NO tiene acceso</text>
+
+  <rect x="686" y="150" width="238" height="98" rx="10" fill="#eaf2fb" stroke="#2a78d6"/>
+  <text x="700" y="172" font-size="13" font-weight="700" fill="#0b0b0b">core</text>
+  <text x="742" y="172" font-size="12" fill="#52514e">pgcrypto, AES-256</text>
+  <text x="700" y="192" font-size="12" fill="#52514e">ingreso · nacimiento · deuda</text>
+  <text x="700" y="210" font-size="12" fill="#52514e">detalle del score (cifrados)</text>
+  <text x="700" y="232" font-size="12" font-weight="700" fill="#0b0b0b">app: solo SELECT por columna</text>
+
+  <rect x="686" y="260" width="238" height="86" rx="10" fill="#f3f2ee" stroke="#c3c2b7"/>
+  <text x="700" y="282" font-size="13" font-weight="700" fill="#0b0b0b">app</text>
+  <text x="734" y="282" font-size="12" fill="#52514e">usuarios · sesiones</text>
+  <text x="700" y="302" font-size="12" fill="#52514e">decisiones · logs_auditoria</text>
+  <text x="700" y="324" font-size="12" font-weight="700" fill="#0b0b0b">auditoría: solo INSERT</text>
+  <text x="700" y="340" font-size="11" fill="#52514e">(sin UPDATE ni DELETE)</text>
+
+  <!-- pipeline -->
+  <rect x="20" y="395" width="170" height="70" rx="12" fill="#f3f2ee" stroke="#c3c2b7"/>
+  <text x="36" y="423" font-size="14" font-weight="700" fill="#0b0b0b">CSV limpios</text>
+  <text x="36" y="444" font-size="12" fill="#52514e">Home Credit (Kaggle)</text>
+  <text x="36" y="458" font-size="11" fill="#52514e">notebook de limpieza</text>
+
+  <line x1="192" y1="430" x2="238" y2="430" stroke="#52514e" stroke-width="2" marker-end="url(#fl)"/>
+
+  <rect x="240" y="385" width="340" height="90" rx="12" fill="#f3f2ee" stroke="#c3c2b7"/>
+  <text x="256" y="410" font-size="14" font-weight="700" fill="#0b0b0b">Pipeline Python</text>
+  <text x="256" y="430" font-size="12" fill="#52514e">load_raw.py → raw</text>
+  <text x="256" y="448" font-size="12" fill="#52514e">transform_core.py → core (cifra con pgcrypto)</text>
+  <text x="256" y="466" font-size="12" fill="#52514e">score_model.py → core.scores + modelo</text>
+
+  <path d="M582,430 H740 V363" fill="none" stroke="#52514e" stroke-width="2" marker-end="url(#fl)"/>
+  <text x="600" y="420" font-size="11" fill="#52514e">superusuario,</text>
+  <text x="600" y="449" font-size="11" fill="#52514e">solo en la carga</text>
+
+  <!-- backup -->
+  <path d="M870,362 V393" fill="none" stroke="#52514e" stroke-width="2" marker-end="url(#fl)"/>
+  <rect x="790" y="395" width="150" height="70" rx="12" fill="#f3f2ee" stroke="#c3c2b7"/>
+  <text x="804" y="421" font-size="14" font-weight="700" fill="#0b0b0b">backup_db.py</text>
+  <text x="804" y="440" font-size="12" fill="#52514e">pg_dump diario</text>
+  <text x="804" y="456" font-size="12" fill="#52514e">retención 7 días</text>
+</svg>
