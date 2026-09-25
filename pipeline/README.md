@@ -285,17 +285,28 @@ Tablas que crea:
 | `core.scores` | 1 fila por cliente: score, banda, apto, puntos por pilar. El detalle (valores de cada factor, ingreso, montos) va en `detalle_cifrado`, cifrado con `pgp_sym_encrypt(..., 'cipher-algo=aes256')`. |
 
 > Nota sobre el algoritmo: `pgp_sym_encrypt` sin opciones usa AES-128 (se ve en el 4º byte del cifrado: `c30d0407…` = AES-128, `c30d0409…` = AES-256). `transform_core.py` y `score_model.py` cifran ingreso, nacimiento, deuda y el detalle del score con el tercer argumento `'cipher-algo=aes256'`, así que todo queda en AES-256.
+>
+> Si tu base se cargó antes de ese cambio, volver a correr `transform_core.py` **no** re-cifra nada (usa `ON CONFLICT DO NOTHING`). Para pasar las filas existentes a AES-256: `python migrar_aes256.py` (idempotente, en una transacción; solo toca filas que no estén en AES-256).
 
 ---
 
 ## Backup y continuidad (`backup_db.py`)
 
 ```bash
-python backup_db.py                              # backup + purga los de más de 7 días
-python backup_db.py --restore backups/archivo.dump
+python backup_db.py --generar-llave                        # una vez: agrega BACKUP_KEY a .env
+python backup_db.py                                        # backup cifrado + purga los de más de 7 días
+python backup_db.py --verificar backups/archivo.dump.enc   # comprueba integridad y llave, sin restaurar
+python backup_db.py --restore backups/archivo.dump.enc     # verifica y después restaura
 ```
 
-`pg_dump` en formato custom (comprimido, restaurable con `pg_restore`), guardado en `backups/` en la raíz del repo (no va a git, pesa como la BD: ~490 MB con el dataset completo). Retención: 7 días, configurable en `RETENCION_DIAS` dentro del script.
+`pg_dump` en formato custom (comprimido, restaurable con `pg_restore`), **cifrado al vuelo con AES-256-GCM**: la salida de `pg_dump` pasa por un pipe y nunca se escribe en claro en el disco. Se guarda en `backups/` en la raíz del repo (no va a git, pesa como la BD: ~490 MB con el dataset completo). Retención: 7 días, configurable en `RETENCION_DIAS` dentro del script.
+
+Por qué cifrar: el dump incluye el schema `raw` (copia en claro de los csv, con el ingreso) y las tablas de la app. Sin cifrar, quien consiga el archivo lee todo sin necesitar la llave de pgcrypto.
+
+- **Llave**: `BACKUP_KEY` (32 bytes aleatorios), distinta de `HC_ENCRYPTION_KEY`. `--generar-llave` la agrega a `.env` y nunca pisa una existente (dejaría ilegibles los backups anteriores). **Guardar una copia fuera del servidor**: sin ella los backups no se pueden restaurar, y si vive junto a ellos no protege nada.
+- **Integridad**: GCM autentica el archivo (y su cabecera). Si alguien lo modifica, o la llave no es la correcta, `--verificar` y `--restore` fallan. El restore hace primero una pasada completa de verificación, así un archivo alterado nunca llega a tocar la base (`--clean`).
+- Los `.dump` sin cifrar de la versión anterior del script ya no se restauran con él (usar `pg_restore` directo) y el script avisa si encuentra alguno en `backups/`.
+- Pruebas del formato (sin BD): `pytest tests/test_backup.py`.
 
 Si `pg_dump`/`pg_restore` del PATH no coinciden con la versión del servidor (típico con dos Postgres instalados, ej. Homebrew + instalador EDB en Mac: `pg_dump: error: server version: 16.0; pg_dump version: 14.17`), setear `PG_BIN_DIR` en el `.env` apuntando a la carpeta bin correcta (ver `.env.example`).
 
