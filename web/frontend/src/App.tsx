@@ -1,9 +1,10 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, onExpirar } from "./api";
+import { api, DEMO, onExpirar } from "./api";
 import Dashboard from "./components/Dashboard";
 import Interno from "./components/Interno";
 import Login from "./components/Login";
+import { DemoCinta } from "./demo/Aviso";
 import { useLocal } from "./hooks";
 import type { Sesion } from "./types";
 
@@ -48,22 +49,25 @@ export default function App() {
   if (sesion === undefined) return null;
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div key={sesion ? sesion.rol : "login"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35 }}>
-        {!sesion ? (
-          <Login
-            aviso={aviso}
-            onLogin={async () => {
-              setAviso(null);
-              setSesion(await api.get<Sesion>("/api/auth/sesion"));
-            }}
-          />
-        ) : sesion.rol === "cliente" ? (
-          <Dashboard sesion={sesion} onSalir={salir} onTema={alternarTema} />
-        ) : (
-          <Interno sesion={sesion} onSalir={salir} onTema={alternarTema} />
-        )}
-      </motion.div>
-    </AnimatePresence>
+    <>
+      <AnimatePresence mode="wait">
+        <motion.div key={sesion ? sesion.rol : "login"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35 }}>
+          {!sesion ? (
+            <Login
+              aviso={aviso}
+              onLogin={async () => {
+                setAviso(null);
+                setSesion(await api.get<Sesion>("/api/auth/sesion"));
+              }}
+            />
+          ) : sesion.rol === "cliente" ? (
+            <Dashboard sesion={sesion} onSalir={salir} onTema={alternarTema} />
+          ) : (
+            <Interno sesion={sesion} onSalir={salir} onTema={alternarTema} />
+          )}
+        </motion.div>
+      </AnimatePresence>
+      {DEMO && sesion && <DemoCinta />}
+    </>
   );
 }

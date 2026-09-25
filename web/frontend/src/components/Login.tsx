@@ -1,7 +1,8 @@
 import * as d3 from "d3";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { api, ApiError } from "../api";
+import { api, ApiError, DEMO } from "../api";
+import { DemoLogin, PASSWORD_DEMO } from "../demo/Aviso";
 import { Icono, Logo, Scramble } from "./ui";
 
 // Deben coincidir con web/backend/scripts/seed_users.py
@@ -92,6 +93,8 @@ export default function Login({ aviso, onLogin }: { aviso: string | null; onLogi
             <p className="ink2">Usa las credenciales que te entregó CrediFácil.</p>
           </div>
 
+          {DEMO && <DemoLogin />}
+
           <AnimatePresence>
             {(error || aviso) && (
               <motion.div
@@ -148,24 +151,39 @@ export default function Login({ aviso, onLogin }: { aviso: string | null; onLogi
             {cargando ? <span className="spinner" aria-label="Verificando" /> : <>Ingresar <Icono.flecha /></>}
           </button>
 
-          <ul className="login-seguridad">
-            <li>
-              <Icono.candado size={14} /> Conexión cifrada con TLS (certificado de CA propia)
-            </li>
-            <li>
-              <Icono.escudo size={14} /> Tu contraseña se guarda como hash Argon2id, nunca en texto plano
-            </li>
-            <li>
-              <Icono.check size={14} /> Sesión en cookie HttpOnly que expira tras 30 min sin actividad
-            </li>
-          </ul>
+          {/* en la demo de Pages no hay backend: estas garantias no aplican ahi */}
+          {!DEMO && (
+            <ul className="login-seguridad">
+              <li>
+                <Icono.candado size={14} /> Conexión cifrada con TLS (certificado de CA propia)
+              </li>
+              <li>
+                <Icono.escudo size={14} /> Tu contraseña se guarda como hash Argon2id, nunca en texto plano
+              </li>
+              <li>
+                <Icono.check size={14} /> Sesión en cookie HttpOnly que expira tras 30 min sin actividad
+              </li>
+            </ul>
+          )}
 
-          <details className="login-demos">
+          <details className="login-demos" open={DEMO}>
             <summary>Cuentas de demostración</summary>
-            <p className="muted">La contraseña es la que mostró el script de carga de usuarios.</p>
+            <p className="muted">
+              {DEMO ? (
+                <>
+                  Contraseña de todas: <span className="mono">{PASSWORD_DEMO}</span>. Prueba una incorrecta 5 veces para ver el bloqueo.
+                </>
+              ) : (
+                "La contraseña es la que mostró el script de carga de usuarios."
+              )}
+            </p>
             <div className="login-demos-grid">
               {DEMOS.map(([u, d]) => (
-                <button key={u} type="button" onClick={() => (setUsuario(u), passRef.current?.focus())}>
+                <button
+                  key={u}
+                  type="button"
+                  onClick={() => (setUsuario(u), DEMO ? setPassword(PASSWORD_DEMO) : passRef.current?.focus())}
+                >
                   <span className="mono">{u}</span>
                   <small>{d}</small>
                 </button>

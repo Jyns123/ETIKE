@@ -53,6 +53,22 @@ Para que el navegador no muestre la advertencia de certificado, confiar en la CA
 
 Con el backend corriendo (`python run.py`), en otra terminal: `cd web/frontend && npm run dev` y abrir https://localhost:5173 (Vite recarga al guardar y reenvía `/api` al backend).
 
+### Demo estática (GitHub Pages)
+
+GitHub Pages no puede correr el backend, así que se publica una versión estática del front en `/demo/` (ver `.github/workflows/pages.yml`):
+
+```bash
+# 1. exportar las respuestas reales de las cuentas demo (con la BD y web/backend/.env listos)
+python web/backend/scripts/export_demo.py        # -> web/frontend/src/demo/datos/*.json
+
+# 2. compilar en modo demo (en local, para probar)
+cd web/frontend && npm run build:demo            # -> dist-demo/
+```
+
+En modo demo `src/api.ts` no llama a `/api`: responde `src/demo/servidor.ts`, que reproduce en el navegador las reglas del backend (roles, bloqueo tras 5 fallos, expiración por inactividad, auditoría de la sesión) con los JSON exportados. Todas las cuentas usan la contraseña `demo`. **No es una medida de seguridad**: los datos de la demo son públicos. En el build normal (`npm run build`) nada de esto entra al bundle.
+
+Los JSON exportados van a git (el workflow no tiene acceso a la BD). Hay que re-exportarlos si cambia el modelo o las cuentas demo.
+
 ## Cuentas demo
 
 Todas usan la contraseña que imprime `seed_users.py`.

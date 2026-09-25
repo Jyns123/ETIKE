@@ -21,3 +21,6 @@ web/backend/.env
 web/certs/
 web/frontend/node_modules/
 web/frontend/dist/
+web/frontend/dist-demo/
+# la demo compilada se copia aca solo en el workflow de Pages
+docs/demo/

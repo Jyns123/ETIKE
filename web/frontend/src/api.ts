@@ -7,6 +7,15 @@ export class ApiError extends Error {
   }
 }
 
+/** Build estatico para GitHub Pages (npm run build:demo): no hay backend y las
+ *  respuestas salen de src/demo/servidor.ts. En el build normal esto es false
+ *  en tiempo de compilacion y la demo ni siquiera entra al bundle. */
+export const DEMO = import.meta.env.MODE === "demo";
+
+const enviar = DEMO
+  ? (ruta: string, init: RequestInit) => import("./demo/servidor").then((m) => m.responder(ruta, init))
+  : (ruta: string, init: RequestInit) => fetch(ruta, init);
+
 type Oyente = () => void;
 const alActividad = new Set<Oyente>();
 const alExpirar = new Set<Oyente>();
@@ -17,7 +26,7 @@ export const onActividad = (f: Oyente) => (alActividad.add(f), () => void alActi
 export const onExpirar = (f: Oyente) => (alExpirar.add(f), () => void alExpirar.delete(f));
 
 async function req<T>(ruta: string, init: RequestInit = {}): Promise<T> {
-  const r = await fetch(ruta, {
+  const r = await enviar(ruta, {
     credentials: "same-origin",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     ...init,
