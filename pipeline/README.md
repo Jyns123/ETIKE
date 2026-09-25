@@ -1,6 +1,6 @@
 # Pipeline: cómo ejecutarlo y cómo probarlo
 
-Carga los csv limpios (dataset/) a Postgres: primero a un schema raw (copia fiel del csv), después a un schema core (cifrado con pgcrypto, con los flags de la limpieza). Ver los comentarios dentro de cada .py para el detalle de qué hace cada paso.
+Carga los csv limpios (dataset/) a Postgres: primero a un schema raw (copia fiel del csv), después a un schema core (cifrado con pgcrypto, con los flags de la limpieza), y por último entrena el scorecard transparente que usa la web (`score_model.py`: `core.modelo_scorecard` + `core.scores`). Ver los comentarios dentro de cada .py para el detalle de qué hace cada paso.
 
 ## 1. Requisitos
 
@@ -67,7 +67,11 @@ Si todo corrió bien, imprime:
 raw.application_train_clean cargada
 raw.bureau_clean cargada
 core.solicitudes y core.historial_bureau poblados
+scorecard entrenado: AUC=0.725 (tradicional 0.739), umbral apto=580, aprobacion sin historial 67.3% vs 64.3%
+core.modelo_scorecard y core.scores poblados (307,507 clientes)
 ```
+
+El paso 3 (scorecard) se puede re-correr solo, sin recargar todo: `python score_model.py` (~3 min).
 
 ## 6. Probar que quedó bien
 
@@ -94,6 +98,15 @@ FROM core.solicitudes WHERE sk_id_curr = 100002;
 
 -- contar cuántos clientes SÍ tienen historial bureau vs no (KPI de inclusión financiera)
 SELECT tiene_historial_bureau, count(*) FROM core.solicitudes GROUP BY tiene_historial_bureau;
+
+-- score del scorecard: distribucion por banda y aprobados con/sin historial
+SELECT banda, tiene_historial, count(*), round(avg(score)) FROM core.scores GROUP BY 1, 2 ORDER BY 1, 2;
+
+-- definicion del modelo (tramos, puntos, metricas): es publica, la web se la muestra al cliente
+SELECT definicion -> 'metricas', definicion -> 'comparacion' FROM core.modelo_scorecard WHERE activo;
+
+-- el detalle por cliente esta cifrado (AES-256); solo se descifra con la llave
+SELECT pgp_sym_decrypt(detalle_cifrado, 'tu-llave-de-HC_ENCRYPTION_KEY') FROM core.scores WHERE sk_id_curr = 100002;
 
 -- salir
 \q
@@ -209,7 +222,11 @@ Si todo corrió bien, se imprime:
 raw.application_train_clean cargada
 raw.bureau_clean cargada
 core.solicitudes y core.historial_bureau poblados
+scorecard entrenado: AUC=0.725 (tradicional 0.739), umbral apto=580, aprobacion sin historial 67.3% vs 64.3%
+core.modelo_scorecard y core.scores poblados (307,507 clientes)
 ```
+
+El paso 3 (scorecard) se puede re-correr solo, sin recargar todo: `python score_model.py` (~3 min).
 
 ### 8. Ver el resultado en DataGrip
 
@@ -232,7 +249,7 @@ Por defecto DataGrip solo muestra el schema `public` (se ve como "1 of 5" al lad
 3. Marcar también `raw` y `core` (además de `public`)
 4. Aceptar
 
-Ahora sí aparecen `raw` y `core` en el árbol, con las tablas adentro (`raw.application_train_clean`, `raw.bureau_clean`, `core.solicitudes`, `core.historial_bureau`).
+Ahora sí aparecen `raw` y `core` en el árbol, con las tablas adentro (`raw.application_train_clean`, `raw.bureau_clean`, `core.solicitudes`, `core.historial_bureau`, `core.modelo_scorecard`, `core.scores`). Si ya se configuró la web, también aparece el schema `app` (usuarios, sesiones, auditoría).
 
 ### 10. Queries de ejemplo (correr en el editor SQL de DataGrip)
 
@@ -247,3 +264,52 @@ FROM core.solicitudes WHERE sk_id_curr = 100002;
 -- contar cuántos clientes SÍ tienen historial bureau vs no (KPI de inclusión financiera)
 SELECT tiene_historial_bureau, count(*) FROM core.solicitudes GROUP BY tiene_historial_bureau;
 ```
+
+---
+
+## Paso 3: scorecard transparente (`score_model.py`)
+
+Entrena el "Score CrediFácil" que explica la web (`web/`). Es un scorecard: cada factor se parte en tramos, cada tramo vale puntos fijos y el score es la suma (base 595 ≈ persona promedio, escala 300–850, cada 50 puntos se duplica la razón buenos/malos). Así se le puede decir al cliente de dónde sale cada punto y qué cambiar para subir.
+
+Decisiones éticas (detalle en los comentarios del .py):
+
+- No usa género, edad, estado civil/hijos, educación, zona, círculo social, ni proxies fuertes de edad (`EXT_SOURCE_1` tiene correlación 0.60 con la edad; antigüedad de documento y de registro).
+- **Neutralidad ante ausencia de historial**: si el cliente no tiene historial en bureau, esos factores valen 0 puntos (no suman ni restan).
+- Entrena además un modelo "tradicional" (con esas variables y penalizando la falta de historial) solo para medir el costo/beneficio: el scorecard pierde 0.015 de AUC (0.725 vs 0.739) y a igual tasa de aprobación global aprueba 67.3% de los clientes sin historial vs 64.3% del tradicional.
+
+Tablas que crea:
+
+| Tabla | Contenido |
+|---|---|
+| `core.modelo_scorecard` | Definición del modelo en JSONB (tramos, puntos, métricas, variables excluidas y por qué). No es secreta. |
+| `core.scores` | 1 fila por cliente: score, banda, apto, puntos por pilar. El detalle (valores de cada factor, ingreso, montos) va en `detalle_cifrado`, cifrado con `pgp_sym_encrypt(..., 'cipher-algo=aes256')`. |
+
+> Nota sobre el algoritmo: `pgp_sym_encrypt` sin opciones usa AES-128 (se ve en el 4º byte del cifrado: `c30d0407…` = AES-128, `c30d0409…` = AES-256). `transform_core.py` y `score_model.py` cifran ingreso, nacimiento, deuda y el detalle del score con el tercer argumento `'cipher-algo=aes256'`, así que todo queda en AES-256.
+>
+> Si tu base se cargó antes de ese cambio, volver a correr `transform_core.py` **no** re-cifra nada (usa `ON CONFLICT DO NOTHING`). Para pasar las filas existentes a AES-256: `python migrar_aes256.py` (idempotente, en una transacción; solo toca filas que no estén en AES-256).
+
+---
+
+## Backup y continuidad (`backup_db.py`)
+
+```bash
+python backup_db.py --generar-llave                        # una vez: agrega BACKUP_KEY a .env
+python backup_db.py                                        # backup cifrado + purga los de más de 7 días
+python backup_db.py --verificar backups/archivo.dump.enc   # comprueba integridad y llave, sin restaurar
+python backup_db.py --restore backups/archivo.dump.enc     # verifica y después restaura
+```
+
+`pg_dump` en formato custom (comprimido, restaurable con `pg_restore`), **cifrado al vuelo con AES-256-GCM**: la salida de `pg_dump` pasa por un pipe y nunca se escribe en claro en el disco. Se guarda en `backups/` en la raíz del repo (no va a git, pesa como la BD: ~490 MB con el dataset completo). Retención: 7 días, configurable en `RETENCION_DIAS` dentro del script.
+
+Por qué cifrar: el dump incluye el schema `raw` (copia en claro de los csv, con el ingreso) y las tablas de la app. Sin cifrar, quien consiga el archivo lee todo sin necesitar la llave de pgcrypto.
+
+- **Llave**: `BACKUP_KEY` (32 bytes aleatorios), distinta de `HC_ENCRYPTION_KEY`. `--generar-llave` la agrega a `.env` y nunca pisa una existente (dejaría ilegibles los backups anteriores). **Guardar una copia fuera del servidor**: sin ella los backups no se pueden restaurar, y si vive junto a ellos no protege nada.
+- **Integridad**: GCM autentica el archivo (y su cabecera). Si alguien lo modifica, o la llave no es la correcta, `--verificar` y `--restore` fallan. El restore hace primero una pasada completa de verificación, así un archivo alterado nunca llega a tocar la base (`--clean`).
+- Los `.dump` sin cifrar de la versión anterior del script ya no se restauran con él (usar `pg_restore` directo) y el script avisa si encuentra alguno en `backups/`.
+- Pruebas del formato (sin BD): `pytest tests/test_backup.py`.
+
+Si `pg_dump`/`pg_restore` del PATH no coinciden con la versión del servidor (típico con dos Postgres instalados, ej. Homebrew + instalador EDB en Mac: `pg_dump: error: server version: 16.0; pg_dump version: 14.17`), setear `PG_BIN_DIR` en el `.env` apuntando a la carpeta bin correcta (ver `.env.example`).
+
+**RTO/RPO** (corriendo el backup 1 vez al día, ej. con cron a las 3am — comando de ejemplo dentro de `backup_db.py`):
+- RPO ≈ 24 h: como mucho se pierde lo cargado/calculado desde el último backup.
+- RTO ≈ minutos: restaurar un dump de este tamaño con `pg_restore` toma unos minutos, no horas (probado: backup + restore completo a una BD nueva, íntegro).

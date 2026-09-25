@@ -30,7 +30,9 @@ def load_csv(conn, csv_path: Path, table: str):
         cur.execute(ddl)
         # COPY es el comando nativo de Postgres para carga masiva: mucho mas
         # rapido que insertar fila por fila, esencial con csv de cientos de MB.
-        with open(csv_path, "r") as f:
+        # encoding explicito: en Windows open() usa cp1252 por defecto y
+        # corromperia los acentos del csv (ej. "Sin organización").
+        with open(csv_path, "r", encoding="utf-8") as f:
             cur.copy_expert(f'COPY raw."{table}" FROM STDIN WITH CSV HEADER', f)
         # indexa solo las columnas de join que esa tabla realmente tenga.
         for key_col in KEY_COLUMNS:

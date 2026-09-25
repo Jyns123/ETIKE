@@ -60,8 +60,8 @@ INSERT INTO core.solicitudes
      dias_empleado_anomalo)
 SELECT
     a."SK_ID_CURR",
-    pgp_sym_encrypt(a."AMT_INCOME_TOTAL"::text, %(key)s),
-    pgp_sym_encrypt(a."DAYS_BIRTH"::text, %(key)s),
+    pgp_sym_encrypt(a."AMT_INCOME_TOTAL"::text, %(key)s, 'cipher-algo=aes256'),
+    pgp_sym_encrypt(a."DAYS_BIRTH"::text, %(key)s, 'cipher-algo=aes256'),
     a."AMT_CREDIT",
     a."AMT_ANNUITY",
     a."NAME_CONTRACT_TYPE",
@@ -88,7 +88,7 @@ INSERT INTO core.historial_bureau
 SELECT
     b."SK_ID_CURR",
     b."CREDIT_ACTIVE",
-    pgp_sym_encrypt(b."AMT_CREDIT_SUM_DEBT"::text, %(key)s),
+    pgp_sym_encrypt(b."AMT_CREDIT_SUM_DEBT"::text, %(key)s, 'cipher-algo=aes256'),
     b."DEBT_NEGATIVA_FLAG" = 1,
     b."CREDIT_DAY_OVERDUE",
     b."CREDIT_TYPE"

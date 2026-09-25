@@ -120,3 +120,27 @@ Ejemplos a listar y justificar: MFA para analistas, cifrado homomórfico para sc
 5. Meter capa de seguridad (cifrado, roles, logs, TLS)
 6. Front mínimo conectado
 7. Escribir informe en paralelo (no dejar para el final)
+
+## 11. Qué hay implementado en este repo
+
+| Carpeta | Contenido |
+|---|---|
+| `notebooks/` | EDA y limpieza (`limpieza_datos.ipynb`), genera los csv limpios |
+| `dataset/` | Los 2 csv limpios (se descargan del Drive, no van a git) |
+| `diccionario_datos/` | Diccionario de la data cruda y de la limpia |
+| `pipeline/` | csv → Postgres: `raw` (copia fiel), `core` (cifrado con pgcrypto) y el scorecard transparente (`core.scores`). Ver `pipeline/README.md` |
+| `web/` | Panel del cliente (React + D3 + FastAPI): score explicado, sugerencias, simulador, comparación anónima, login seguro, auditoría y TLS con CA propia. Ver `web/README.md` |
+| `docs/` | Informe escrito del proyecto (GitHub Pages). Ver sección siguiente |
+
+Orden para levantar todo: descargar los csv → `pipeline/README.md` (pasos 1 a 3) → `web/README.md`.
+
+Resultados del scorecard (con los datos limpios): AUC 0.725 sin variables sensibles vs 0.739 de un modelo tradicional que sí las usa; a igual tasa de aprobación global, aprueba al 67.3% de los clientes sin historial en bureau vs 64.3% (KPI de reducción de exclusión financiera de la sección 1). Fuente de verdad de estas cifras: `core.modelo_scorecard` (`definicion -> 'comparacion'`).
+
+## 12. Informe escrito y demo (GitHub Pages)
+
+Publicado en **https://jyns123.github.io/ETIKE/**:
+
+- `/`: el informe completo (motivación, trasfondo teórico, requerimientos, diseño, implementación, plan de respuesta a incidentes, recomendaciones futuras, planificación y retrospectiva). Fuente: [`docs/index.md`](docs/index.md) (Jekyll).
+- `/demo/`: versión estática del panel, sin backend: respuestas reales del backend exportadas para las cuentas demo (contraseña `demo`). Ver `web/README.md`, "Demo estática".
+
+Lo publica el workflow [`.github/workflows/pages.yml`](.github/workflows/pages.yml) en cada push a `main` (en un PR solo compila). En `Settings` → `Pages` la fuente debe ser **GitHub Actions**.

@@ -9,6 +9,18 @@ dataset/*.csv
 # secretos del pipeline
 pipeline/.env
 
+# backups de la BD (pesan cientos de MB, no van a git)
+backups/
+
 # bytecode compilado de Python
 __pycache__/
 *.pyc
+
+# web: secretos, certificados (llaves privadas) y artefactos de build
+web/backend/.env
+web/certs/
+web/frontend/node_modules/
+web/frontend/dist/
+web/frontend/dist-demo/
+# la demo compilada se copia aca solo en el workflow de Pages
+docs/demo/
