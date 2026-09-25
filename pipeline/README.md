@@ -67,7 +67,7 @@ Si todo corrió bien, imprime:
 raw.application_train_clean cargada
 raw.bureau_clean cargada
 core.solicitudes y core.historial_bureau poblados
-scorecard entrenado: AUC=0.725 (tradicional 0.739), umbral apto=580, aprobacion sin historial 67.3% vs 64.3%
+scorecard entrenado: AUC=0.725 (tradicional 0.739), umbral apto=580, aprobacion sin historial 67.3% vs 65.0%
 core.modelo_scorecard y core.scores poblados (307,507 clientes)
 ```
 
@@ -222,7 +222,7 @@ Si todo corrió bien, se imprime:
 raw.application_train_clean cargada
 raw.bureau_clean cargada
 core.solicitudes y core.historial_bureau poblados
-scorecard entrenado: AUC=0.725 (tradicional 0.739), umbral apto=580, aprobacion sin historial 67.3% vs 64.3%
+scorecard entrenado: AUC=0.725 (tradicional 0.739), umbral apto=580, aprobacion sin historial 67.3% vs 65.0%
 core.modelo_scorecard y core.scores poblados (307,507 clientes)
 ```
 
@@ -275,7 +275,7 @@ Decisiones éticas (detalle en los comentarios del .py):
 
 - No usa género, edad, estado civil/hijos, educación, zona, círculo social, ni proxies fuertes de edad (`EXT_SOURCE_1` tiene correlación 0.60 con la edad; antigüedad de documento y de registro).
 - **Neutralidad ante ausencia de historial**: si el cliente no tiene historial en bureau, esos factores valen 0 puntos (no suman ni restan).
-- Entrena además un modelo "tradicional" (con esas variables y penalizando la falta de historial) solo para medir el costo/beneficio: el scorecard pierde 0.015 de AUC (0.725 vs 0.739) y a igual tasa de aprobación global aprueba 67.3% de los clientes sin historial vs 64.3% del tradicional.
+- Entrena además un modelo "tradicional" (con esas variables y penalizando la falta de historial) solo para medir el costo/beneficio: el scorecard pierde 0.014 de AUC (0.725 vs 0.739) y a igual tasa de aprobación global aprueba 67.3% de los clientes sin historial vs 65.0% del tradicional.
 
 Tablas que crea:
 

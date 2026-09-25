@@ -134,7 +134,7 @@ Ejemplos a listar y justificar: MFA para analistas, cifrado homomórfico para sc
 
 Orden para levantar todo: descargar los csv → `pipeline/README.md` (pasos 1 a 3) → `web/README.md`.
 
-Resultados del scorecard (con los datos limpios): AUC 0.725 sin variables sensibles vs 0.739 de un modelo tradicional que sí las usa; a igual tasa de aprobación global, aprueba al 67.3% de los clientes sin historial en bureau vs 64.3% (KPI de reducción de exclusión financiera de la sección 1). Fuente de verdad de estas cifras: `core.modelo_scorecard` (`definicion -> 'comparacion'`).
+Resultados del scorecard (con los datos limpios): AUC 0.725 sin variables sensibles vs 0.739 de un modelo tradicional que sí las usa; a igual tasa de aprobación global (75.1%), aprueba al 67.3% de los clientes sin historial en bureau vs 65.0% (KPI de reducción de exclusión financiera de la sección 1). Fuente de verdad de estas cifras: `core.modelo_scorecard` (`definicion -> 'comparacion'`).
 
 ## 12. Informe escrito y demo (GitHub Pages)
 

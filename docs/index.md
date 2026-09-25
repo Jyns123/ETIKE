@@ -540,7 +540,7 @@ Cada factor se divide en tramos, cada tramo vale puntos fijos y el score es la s
 
 **Neutralidad ante ausencia de historial**: los cinco factores que dependen del bureau valen **0 puntos** si el cliente no tiene historial: no suman ni restan.
 
-**Costo medido**: frente a un modelo tradicional entrenado solo para comparar, el scorecard tiene AUC **0,725** vs 0,739 y, a igual aprobación global (75,1%), aprueba al **67,3%** de los clientes sin historial contra 64,3%.
+**Costo medido**: frente a un modelo tradicional entrenado solo para comparar, el scorecard tiene AUC **0,725** vs 0,739 y, a igual aprobación global (75,1%), aprueba al **67,3%** de los clientes sin historial contra 65,0%.
 
 ### 11.3 Aplicación web
 
