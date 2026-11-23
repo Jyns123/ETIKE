@@ -321,6 +321,33 @@ Cada login (exitoso o no), bloqueo por IP, lectura de datos, descifrado (permiti
 - Retención de 7 días con purga automática; los backups no van a git.
 - **RPO ≈ 24 h** con un backup diario (cron). **RTO**: **16 s** medidos al restaurar la base completa (488,5 MB cifrados) en una base nueva, incluida la verificación de integridad, con conteos idénticos a la original (sección 7.2).
 
+### 6.8 Privacidad diferencial en agregados
+
+El cifrado y el control de acceso (6.1-6.4) protegen la confidencialidad de un registro individual, pero no a alguien que combine varias respuestas **agregadas** para reconstruir el dato de una persona. Eso es lo que protege esta sección, pensada para `/api/comunidad` (RF-05, sección 3.1): compararse con otros sin exponer a nadie en particular, ni siquiera correlacionando varias consultas.
+
+**Mecanismo**: ruido de Laplace vía `diffprivlib` (IBM, Holohan et al. 2019), aplicado en `notebooks/privacidad_diferencial.ipynb` a dos agregados de `application_train_clean.csv`:
+
+| Agregado | Bounds | Por qué |
+|---|---|---|
+| Ingreso promedio por ocupación (`AMT_INCOME_TOTAL` × `OCCUPATION_TYPE`) | Percentil 1-99 del ingreso **global** | Calcularlos sobre todo el dataset, no por grupo, para no filtrar información del grupo a través de los bounds mismos |
+| Tasa de default por rango de edad (`TARGET` × rango de `DAYS_BIRTH`) | (0, 1) | `TARGET` es binario |
+
+Se eligió `diffprivlib` sobre OpenDP por su API compatible con scikit-learn (menos cambios al pipeline existente) y su documentación con casos de uso publicados.
+
+**Evaluación — barrido de ε** (0.1, 1 y 10; 20 corridas por valor, porque el ruido es aleatorio), medido como error absoluto promedio frente al valor real, para el grupo más chico y el más grande del ingreso por ocupación (gráfico completo en `docs/assets/dp_tradeoff_ingreso.png`):
+
+| ε | Error, IT staff (n=526, real S/ 205 490) | Error, Sin especificar (n=96 389, real S/ 151 819) |
+|---|---|---|
+| 0.1 | S/ 7 843.95 (≈3.8%) | S/ 103.44 (≈0.07%) |
+| 1 | S/ 784.40 (≈0.38%) | S/ 94.88 (≈0.06%) |
+| 10 | S/ 78.44 (≈0.04%) | S/ 94.35 (≈0.06%) |
+
+Con n≈96 000 el ruido ya se diluye solo por el tamaño de la muestra, casi sin importar el ε. El ε solo cambia algo real en los grupos chicos — mismo fenómeno que el k-anonimato del Lab 10: proteger un grupo chico cuesta más utilidad que proteger uno grande.
+
+**ε elegido para producción: 1.** Apple usa ε individuales de 2 a 8 por tipo de dato en telemetría continua (hasta ~16/día sumando categorías, según análisis independiente de terceros), y el Censo de EE. UU. 2020 usó un presupuesto global de 19.61 en su publicación oficial de junio de 2021. CrediFácil se parece más al caso del Censo (una publicación de agregados, no telemetría repetida), pero no necesita un ε tan alto: con ε=1 el error ya baja de 0.4% en el grupo más chico de la tabla, y subir a ε=10 solo ahorra ~700 soles más a cambio de una garantía diez veces más débil. Es, además, el valor por defecto que trae la propia librería `diffprivlib` cuando no se especifica otro.
+
+**Límite que el ε no resuelve**: ningún valor de ε arregla un grupo demasiado chico, porque el ruido necesario para protegerlo es, en proporción, siempre grande. Grupos por debajo de ~500 personas deberían fusionarse con una categoría vecina antes de publicarse, en vez de forzar un ε más alto.
+
 ---
 
 ## 7. Pruebas y evidencias de seguridad
@@ -633,6 +660,10 @@ El primer día se escribió una guía (el `README.md` del repositorio) que fijó
 - RFC 9106, Argon2: <https://www.rfc-editor.org/rfc/rfc9106>
 - RFC 4880, OpenPGP (formato de `pgcrypto`): <https://www.rfc-editor.org/rfc/rfc4880>
 - PostgreSQL, documentación de `pgcrypto`: <https://www.postgresql.org/docs/16/pgcrypto.html>
+- Holohan, N. et al. (2019). *Diffprivlib: The IBM Differential Privacy Library*: <https://arxiv.org/abs/1907.02444>
+- Apple, *Differential Privacy Overview*: <https://www.apple.com/privacy/docs/Differential_Privacy_Overview.pdf>
+- U.S. Census Bureau (2021). *Census Bureau Sets Key Parameters to Protect Privacy in 2020 Census Results*: <https://www.census.gov/newsroom/press-releases/2021/2020-census-key-parameters.html>
+- Oficina del Censo de EE. UU. (2021). *La privacidad diferencial y el Censo 2020* (hoja informativa oficial en español): <https://www.census.gov/content/dam/Census/library/factsheets/2021/differential-privacy-and-the-2020-census-spanish.pdf>
 
 ---
 
