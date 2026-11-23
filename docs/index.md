@@ -348,6 +348,8 @@ Con n≈96 000 el ruido ya se diluye solo por el tamaño de la muestra, casi sin
 
 **Límite que el ε no resuelve**: ningún valor de ε arregla un grupo demasiado chico, porque el ruido necesario para protegerlo es, en proporción, siempre grande. Grupos por debajo de ~500 personas deberían fusionarse con una categoría vecina antes de publicarse, en vez de forzar un ε más alto.
 
+**Qué no toca esta sección**: el ruido de Laplace se aplica solo a los agregados que expone `/api/comunidad`, no al entrenamiento del scorecard — el modelo de crédito no usa estos datos ruidosos para decidir. El tradeoff de utilidad **del modelo** (no de un agregado) ya está medido en la sección 11.2: ahí el costo de las decisiones éticas (excluir variables protegidas y sus proxies) se mide en AUC (0,725 vs. 0,739). Son dos tradeoffs de utilidad distintos y complementarios — uno de privacidad sobre un agregado, otro de ética sobre el modelo — no uno solo.
+
 ---
 
 ## 7. Pruebas y evidencias de seguridad
@@ -567,7 +569,7 @@ Cada factor se divide en tramos, cada tramo vale puntos fijos y el score es la s
 
 **Neutralidad ante ausencia de historial**: los cinco factores que dependen del bureau valen **0 puntos** si el cliente no tiene historial: no suman ni restan.
 
-**Costo medido**: frente a un modelo tradicional entrenado solo para comparar, el scorecard tiene AUC **0,725** vs 0,739 y, a igual aprobación global (75,1%), aprueba al **67,3%** de los clientes sin historial contra 65,0%.
+**Costo medido**: frente a un modelo tradicional entrenado solo para comparar, el scorecard tiene AUC **0,725** vs 0,739 y, a igual aprobación global (75,1%), aprueba al **67,3%** de los clientes sin historial contra 65,0%. Este es el tradeoff de utilidad **del modelo**; el tradeoff de utilidad de la privacidad diferencial, sobre los agregados del panel de comunidad (no sobre el modelo), está en la sección 6.8.
 
 ### 11.3 Aplicación web
 
