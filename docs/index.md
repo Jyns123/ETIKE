@@ -823,7 +823,7 @@ Cada riesgo se describe como daño para la persona. La probabilidad es remota, p
 |---|---|---|---|
 | Medidas aprobadas por | Jyns Ordóñez | 26-nov-2026 | Las de 14.6 |
 | Riesgos residuales aceptados por | Jyns Ordóñez | 26-nov-2026 | Siete medios; R12, condicionado a la condición 1 |
-| Revisión cruzada y aprobación | Joaquin Salazar | *pendiente* | Aprueba también las medidas y los riesgos residuales |
+| Revisión cruzada y aprobación | Joaquin Salazar | 27-nov-2026 | Aprueba también las medidas y los riesgos residuales |
 | Opinión del Oficial de Datos Personales | No designado | — | Empresa ficticia; designarlo es la condición 2 |
 | Revisión periódica | Equipo del proyecto | Nov-2027 | Antes, si cambia el modelo, se agrega un dato, se pasa a la nube o hay un incidente (9) |
 
