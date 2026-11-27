@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "../api";
-import { ACCIONES_INTERNAS, entero, fechaHora, pct } from "../lib/format";
+import { accionInterna, entero, fechaHora, pct } from "../lib/format";
 import type { Sesion, SolicitudInterna } from "../types";
 import Topbar from "./Topbar";
 import { Icono, Section, Segmentado } from "./ui";
@@ -244,7 +244,7 @@ export default function Interno(props: { sesion: Sesion; onSalir: () => void; on
                         <td>
                           <span className="mono">{l.usuario}</span> <span className="muted">{l.rol ?? ""}</span>
                         </td>
-                        <td>{ACCIONES_INTERNAS[l.accion] ?? l.accion}</td>
+                        <td>{accionInterna(l)}</td>
                         <td className="mono muted">{l.recurso ?? "—"}</td>
                         <td className="mono">{l.ip}</td>
                         <td>

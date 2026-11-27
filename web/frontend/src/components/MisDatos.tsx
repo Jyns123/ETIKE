@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "../api";
-import { ACCIONES, fechaHora, monto } from "../lib/format";
+import { accionCliente, fechaHora, monto } from "../lib/format";
 import type { Actividad, DatoCifrado } from "../types";
 import { Icono, InfoTip, Scramble, Section } from "./ui";
 
@@ -135,7 +135,7 @@ export default function MisDatos() {
                 <motion.li key={a.ts + a.accion} layout initial={{ opacity: 0, x: -12, backgroundColor: "var(--pos-wash)" }} animate={{ opacity: 1, x: 0, backgroundColor: "rgba(0,0,0,0)" }} transition={{ duration: 0.8 }}>
                   <span className={`act-dot ${a.exito ? "" : "fallo"}`} />
                   <div>
-                    <b>{ACCIONES[a.accion] ?? a.accion}</b>
+                    <b>{accionCliente(a)}</b>
                     {!a.exito && <span className="chip chip-serious" style={{ height: 20, marginLeft: 8, fontSize: 11 }}>denegado</span>}
                     <p className="muted">
                       {a.quien} · {fechaHora(a.ts)} · IP {a.ip}

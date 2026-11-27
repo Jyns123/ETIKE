@@ -66,6 +66,23 @@ export const ACCIONES_INTERNAS: Record<string, string> = {
   DECISION_SOLICITUD: "Decidió sobre una solicitud",
 };
 
+/** DESCIFRAR registra el ingreso descifrado y también el intento negado sobre otro
+ *  campo (su recurso es el campo pedido): la etiqueta depende del recurso. */
+type RegistroAccion = { accion: string; recurso: string | null };
+const RECURSO_INGRESO = "core.solicitudes.ingreso_cifrado";
+
+export function accionCliente(a: RegistroAccion) {
+  if (a.accion === "DESCIFRAR" && a.recurso !== RECURSO_INGRESO)
+    return a.recurso === "nacimiento" ? "Intento de descifrar tu fecha de nacimiento" : "Intento de descifrar un dato no permitido";
+  return ACCIONES[a.accion] ?? a.accion;
+}
+
+export function accionInterna(a: RegistroAccion) {
+  if (a.accion === "DESCIFRAR" && a.recurso !== RECURSO_INGRESO)
+    return a.recurso === "nacimiento" ? "Intentó descifrar su fecha de nacimiento" : "Intentó descifrar un dato no permitido";
+  return ACCIONES_INTERNAS[a.accion] ?? a.accion;
+}
+
 export function fechaHora(iso: string) {
   return new Intl.DateTimeFormat("es-PE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
 }
