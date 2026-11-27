@@ -6,6 +6,47 @@
 
 **[Abrir la demo del panel →](demo/)** · [Código fuente en GitHub](https://github.com/Jyns123/ETIKE)
 
+<details id="indice-flotante" style="position:fixed; bottom:20px; right:20px; z-index:999; max-width:270px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <summary style="list-style:none; cursor:pointer; background:#159957; background:linear-gradient(120deg,#155799,#159957); color:#fff; padding:10px 18px; border-radius:24px; box-shadow:0 2px 10px rgba(0,0,0,.3); font-weight:600; font-size:14px; display:inline-block; user-select:none;">☰ Índice</summary>
+  <nav style="background:#fff; color:#1b2430; border:1px solid #d7dde2; border-radius:10px; margin-top:8px; padding:14px 18px; max-height:65vh; overflow-y:auto; box-shadow:0 6px 20px rgba(0,0,0,.25); font-size:13.5px; line-height:1.75;">
+    <ol style="padding-left:18px; margin:0;">
+      <li><a href="#1-contexto-y-caso-de-negocio">Contexto y caso de negocio</a></li>
+      <li><a href="#2-marco-normativo-y-estándares">Marco normativo y estándares</a></li>
+      <li><a href="#3-requerimientos">Requerimientos</a></li>
+      <li><a href="#4-modelo-de-amenazas">Modelo de amenazas</a></li>
+      <li><a href="#5-arquitectura-y-diseño-de-seguridad">Arquitectura y diseño de seguridad</a></li>
+      <li><a href="#6-controles-implementados">Controles implementados</a>
+        <ul style="padding-left:16px; margin:4px 0; list-style:disc;">
+          <li><a href="#68-privacidad-diferencial-en-agregados">6.8 Privacidad diferencial</a></li>
+        </ul>
+      </li>
+      <li><a href="#7-pruebas-y-evidencias-de-seguridad">Pruebas y evidencias</a></li>
+      <li><a href="#8-uso-seguro-de-los-datos-políticas-procedimientos-y-formación">Uso seguro de los datos</a></li>
+      <li><a href="#9-plan-de-respuesta-a-incidentes">Plan de respuesta a incidentes</a></li>
+      <li><a href="#10-riesgos-residuales-y-recomendaciones-futuras">Riesgos residuales</a></li>
+      <li><a href="#11-implementación-del-sistema">Implementación del sistema</a>
+        <ul style="padding-left:16px; margin:4px 0; list-style:disc;">
+          <li><a href="#112-scorecard-transparente-y-decisiones-éticas">11.2 Scorecard y decisiones éticas</a></li>
+        </ul>
+      </li>
+      <li><a href="#12-planificación-y-ejecución">Planificación y ejecución</a></li>
+      <li><a href="#13-lecciones-aprendidas-y-retrospectiva">Lecciones aprendidas</a></li>
+      <li><a href="#14-evaluación-de-impacto-en-la-protección-de-datos-dpia">DPIA</a>
+        <ul style="padding-left:16px; margin:4px 0; list-style:disc;">
+          <li><a href="#141-paso-1-necesidad-de-la-evaluación">14.1 Necesidad</a></li>
+          <li><a href="#142-paso-2-descripción-del-tratamiento">14.2 Descripción</a></li>
+          <li><a href="#143-paso-3-consulta">14.3 Consulta</a></li>
+          <li><a href="#144-paso-4-necesidad-y-proporcionalidad">14.4 Necesidad y proporcionalidad</a></li>
+          <li><a href="#145-paso-5-riesgos">14.5 Riesgos</a></li>
+          <li><a href="#146-paso-6-medidas-y-riesgo-residual">14.6 Medidas</a></li>
+          <li><a href="#147-paso-7-decisión-y-firmas">14.7 Decisión y firmas</a></li>
+        </ul>
+      </li>
+      <li><a href="#15-fuentes">Fuentes</a></li>
+    </ol>
+  </nav>
+</details>
+
 > **Resumen.** CrediFácil es una fintech ficticia que da microcréditos a personas sin historial bancario. Maneja datos que la ley peruana considera **sensibles**, como el ingreso de cada solicitante, así que el proyecto se diseñó primero desde la ciberseguridad:
 >
 > - **Modelo de amenazas explícito** (STRIDE).
