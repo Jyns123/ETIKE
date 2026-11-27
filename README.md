@@ -125,7 +125,7 @@ Ejemplos a listar y justificar: MFA para analistas, cifrado homomórfico para sc
 
 | Carpeta | Contenido |
 |---|---|
-| `notebooks/` | EDA y limpieza (`limpieza_datos.ipynb`), genera los csv limpios |
+| `notebooks/` | EDA y limpieza (`limpieza_datos.ipynb`), genera los csv limpios; privacidad diferencial (`privacidad_diferencial.ipynb`): ruido de Laplace con `diffprivlib` y barrido de ε, sección 6.8 del informe |
 | `dataset/` | Los 2 csv limpios (se descargan del Drive, no van a git) |
 | `diccionario_datos/` | Diccionario de la data cruda y de la limpia |
 | `pipeline/` | csv → Postgres: `raw` (copia fiel), `core` (cifrado con pgcrypto) y el scorecard transparente (`core.scores`). Ver `pipeline/README.md` |

@@ -14,6 +14,7 @@
 > - **Contraseñas con Argon2id**, con bloqueo ante fuerza bruta.
 > - **Control de acceso por rol y por dato**, más un rol de base de datos de mínimo privilegio que ni siquiera puede leer los datos en claro ni borrar la auditoría.
 > - **Registro inalterable de cada acceso** a datos personales.
+> - **Privacidad diferencial** en los agregados: ruido de Laplace con ε = 1, elegido con un barrido medido.
 > - **Políticas, formación y un plan de respuesta** con los plazos del nuevo reglamento de la Ley 29733.
 >
 > Los controles se verifican con 51 pruebas automatizadas, varias de ellas ataques reales contra la aplicación. Sobre esa base, el score es transparente: cada punto se explica, y no tener historial no penaliza.
@@ -117,6 +118,7 @@ No buscamos una certificación, pero usamos estándares internacionales como lis
 | Plan de respuesta a incidentes (9) | 5.24 a 5.28 Gestión de incidentes | NIST SP 800-61 |
 | Concientización y formación (8) | 6.3 Concienciación, educación y formación | |
 | Privacidad por diseño | 5.34 Privacidad y protección de datos personales | Ley 29733 y D.S. 016-2024-JUS |
+| Privacidad diferencial en los agregados (6.8) | 5.34 Privacidad y protección de datos personales · 8.11 Enmascaramiento de datos | Dwork y Roth (2014); `diffprivlib` |
 
 ### 2.3 Trasfondo ético: scoring alternativo y discriminación por proxy
 
@@ -329,26 +331,37 @@ El cifrado y el control de acceso (6.1-6.4) protegen la confidencialidad de un r
 
 | Agregado | Bounds | Por qué |
 |---|---|---|
-| Ingreso promedio por ocupación (`AMT_INCOME_TOTAL` × `OCCUPATION_TYPE`) | Percentil 1-99 del ingreso **global** | Calcularlos sobre todo el dataset, no por grupo, para no filtrar información del grupo a través de los bounds mismos |
+| Ingreso promedio por ocupación (`AMT_INCOME_TOTAL` × `OCCUPATION_TYPE`) | Percentil 1-99 del ingreso **global**: 45 000 a 472 500 u.m. | Calcularlos sobre todo el dataset, no por grupo, para no filtrar información del grupo a través de los bounds mismos |
 | Tasa de default por rango de edad (`TARGET` × rango de `DAYS_BIRTH`) | (0, 1) | `TARGET` es binario |
 
 Se eligió `diffprivlib` sobre OpenDP por su API compatible con scikit-learn (menos cambios al pipeline existente) y su documentación con casos de uso publicados.
 
-**Evaluación — barrido de ε** (0.1, 1 y 10; 20 corridas por valor, porque el ruido es aleatorio), medido como error absoluto promedio frente al valor real, para el grupo más chico y el más grande del ingreso por ocupación (gráfico completo en `docs/assets/dp_tradeoff_ingreso.png`):
+**Evaluación — barrido de ε** (0,1, 1 y 10; 20 corridas por valor, porque el ruido es aleatorio), medido como error absoluto promedio frente al valor real, para el grupo más chico y el más grande del ingreso por ocupación. Los montos están en las unidades monetarias del dataset (u.m.), no en soles (sección 1.2):
 
-| ε | Error, IT staff (n=526, real S/ 205 490) | Error, Sin especificar (n=96 389, real S/ 151 819) |
+![Error promedio del ingreso por ocupación según ε: el grupo chico (IT staff) baja de ~7 800 a ~80 u.m.; el grande (Sin especificar) queda plano en ~94 u.m.](assets/dp_tradeoff_ingreso.png)
+
+| ε | Error, IT staff (n = 526, real 205 490 u.m.) | Error, Sin especificar (n = 96 389, real 151 819 u.m.) |
 |---|---|---|
-| 0.1 | S/ 7 843.95 (≈3.8%) | S/ 103.44 (≈0.07%) |
-| 1 | S/ 784.40 (≈0.38%) | S/ 94.88 (≈0.06%) |
-| 10 | S/ 78.44 (≈0.04%) | S/ 94.35 (≈0.06%) |
+| 0,1 | 7 843,95 u.m. (≈3,8%) | 103,44 u.m. (≈0,07%) |
+| 1 | 784,40 u.m. (≈0,38%) | 94,88 u.m. (≈0,06%) |
+| 10 | 78,44 u.m. (≈0,04%) | 94,35 u.m. (≈0,06%) |
 
-Con n≈96 000 el ruido ya se diluye solo por el tamaño de la muestra, casi sin importar el ε. El ε solo cambia algo real en los grupos chicos — mismo fenómeno que el k-anonimato del Lab 10: proteger un grupo chico cuesta más utilidad que proteger uno grande.
+El error tiene dos fuentes, y la tabla muestra las dos:
 
-**ε elegido para producción: 1.** Apple usa ε individuales de 2 a 8 por tipo de dato en telemetría continua (hasta ~16/día sumando categorías, según análisis independiente de terceros), y el Censo de EE. UU. 2020 usó un presupuesto global de 19.61 en su publicación oficial de junio de 2021. CrediFácil se parece más al caso del Censo (una publicación de agregados, no telemetría repetida), pero no necesita un ε tan alto: con ε=1 el error ya baja de 0.4% en el grupo más chico de la tabla, y subir a ε=10 solo ahorra ~700 soles más a cambio de una garantía diez veces más débil. Es, además, el valor por defecto que trae la propia librería `diffprivlib` cuando no se especifica otro.
+- **Ruido**: su escala es (472 500 − 45 000) / (n · ε). En IT staff es de ~813 u.m. con ε = 1 y baja diez veces con cada salto de ε, igual que el error medido. En "Sin especificar", con n ≈ 96 000, es de solo 4,4 u.m.: se diluye por el tamaño del grupo.
+- **Sesgo de recorte**: `diffprivlib` recorta cada valor a los bounds antes de promediar. "Sin especificar" tiene 1 076 ingresos por debajo de 45 000, y subirlos al límite mueve la media 94,3 u.m. Ese es el error que queda con cualquier ε: depende de los bounds, no de ε, y por eso esa curva es plana (fase 3b del notebook).
+
+El ε solo cambia algo real en los grupos chicos — mismo fenómeno que el k-anonimato del Lab 10: proteger un grupo chico cuesta más utilidad que proteger uno grande.
+
+**ε elegido para producción: 1.** Apple usa ε individuales de 2 a 8 por tipo de dato en telemetría continua (hasta ~16 por día sumando categorías, según el análisis independiente de Tang et al., 2017), y el Censo de EE. UU. 2020 usó un presupuesto global de 19,61 en su publicación oficial de junio de 2021. CrediFácil se parece más al caso del Censo (una publicación de agregados, no telemetría repetida), pero no necesita un ε tan alto: con ε = 1 el error ya baja de 0,4% en el grupo más chico de la tabla, y subir a ε = 10 solo ahorra ~700 u.m. más a cambio de una garantía diez veces más débil. Es, además, el valor por defecto que trae la propia librería `diffprivlib` cuando no se especifica otro.
+
+**Presupuesto por publicación, no por consulta**: si cada consulta trajera ruido nuevo, promediar muchas respuestas lo anularía, porque los ε de cada respuesta se suman (composición secuencial). Por eso los agregados ruidosos se calculan una vez por publicación (por ejemplo, al reentrenar el modelo) y el endpoint devuelve siempre esos mismos valores, como el Censo, que publica una sola vez. Dentro de una tabla los grupos son disjuntos (cada persona tiene una sola ocupación), así que la tabla completa cuesta ε = 1 (composición paralela). Publicar las dos tablas, que cubren a las mismas personas, cuesta ε = 2 por publicación.
 
 **Límite que el ε no resuelve**: ningún valor de ε arregla un grupo demasiado chico, porque el ruido necesario para protegerlo es, en proporción, siempre grande. Grupos por debajo de ~500 personas deberían fusionarse con una categoría vecina antes de publicarse, en vez de forzar un ε más alto.
 
-**Qué no toca esta sección**: el ruido de Laplace se aplica solo a los agregados que expone `/api/comunidad`, no al entrenamiento del scorecard — el modelo de crédito no usa estos datos ruidosos para decidir. El tradeoff de utilidad **del modelo** (no de un agregado) ya está medido en la sección 11.2: ahí el costo de las decisiones éticas (excluir variables protegidas y sus proxies) se mide en AUC (0,725 vs. 0,739). Son dos tradeoffs de utilidad distintos y complementarios — uno de privacidad sobre un agregado, otro de ética sobre el modelo — no uno solo.
+**Qué no toca esta sección**: el ruido de Laplace se aplica solo a los agregados que se publican a los clientes, no al entrenamiento del scorecard — el modelo de crédito no usa estos datos ruidosos para decidir. El tradeoff de utilidad **del modelo** (no de un agregado) ya está medido en la sección 11.2: ahí el costo de las decisiones éticas (excluir variables protegidas y sus proxies) se mide en AUC (0,725 vs. 0,739). Son dos tradeoffs de utilidad distintos y complementarios — uno de privacidad sobre un agregado, otro de ética sobre el modelo — no uno solo.
+
+Tampoco reemplaza lo que hoy devuelve `/api/comunidad` (vecinos con alias, score redondeado e ingreso cifrado, 6.4): es una capa más para los agregados. La tasa por edad sirve para probar el mecanismo con una variable binaria, pero la app no la publicaría, porque nunca descifra la fecha de nacimiento (RS-13). Los agregados que la app sí muestra a cualquier cliente (la distribución de scores y la tasa de atraso de cada tramo) salen de las 307 507 solicitudes y son los que llevarían este ruido al desplegarlo (sección 10).
 
 ---
 
@@ -666,6 +679,8 @@ El primer día se escribió una guía (el `README.md` del repositorio) que fijó
 - Apple, *Differential Privacy Overview*: <https://www.apple.com/privacy/docs/Differential_Privacy_Overview.pdf>
 - U.S. Census Bureau (2021). *Census Bureau Sets Key Parameters to Protect Privacy in 2020 Census Results*: <https://www.census.gov/newsroom/press-releases/2021/2020-census-key-parameters.html>
 - Oficina del Censo de EE. UU. (2021). *La privacidad diferencial y el Censo 2020* (hoja informativa oficial en español): <https://www.census.gov/content/dam/Census/library/factsheets/2021/differential-privacy-and-the-2020-census-spanish.pdf>
+- Tang, J. et al. (2017). *Privacy Loss in Apple's Implementation of Differential Privacy on MacOS 10.12*: <https://arxiv.org/abs/1709.02753>
+- Dwork, C. y Roth, A. (2014). *The Algorithmic Foundations of Differential Privacy*: <https://www.cis.upenn.edu/~aaroth/Papers/privacybook.pdf>
 
 ---
 
