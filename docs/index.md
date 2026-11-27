@@ -16,6 +16,7 @@
 > - **Registro inalterable de cada acceso** a datos personales.
 > - **Privacidad diferencial** en los agregados: ruido de Laplace con ε = 1, elegido con un barrido medido.
 > - **Políticas, formación y un plan de respuesta** con los plazos del nuevo reglamento de la Ley 29733.
+> - Una **evaluación de impacto (DPIA)** de siete pasos que reúne todo lo anterior, mide el efecto del score por género y por edad, y fija qué falta antes de tratar datos reales (sección 14).
 >
 > Los controles se verifican con 51 pruebas automatizadas, varias de ellas ataques reales contra la aplicación. Sobre esa base, el score es transparente: cada punto se explica, y no tener historial no penaliza.
 
@@ -36,7 +37,8 @@
 11. [Implementación del sistema](#11-implementación-del-sistema)
 12. [Planificación y ejecución](#12-planificación-y-ejecución)
 13. [Lecciones aprendidas y retrospectiva](#13-lecciones-aprendidas-y-retrospectiva)
-14. [Fuentes](#14-fuentes)
+14. [Evaluación de impacto en la protección de datos (DPIA)](#14-evaluación-de-impacto-en-la-protección-de-datos-dpia)
+15. [Fuentes](#15-fuentes)
 
 ---
 
@@ -98,7 +100,9 @@ El Perú regula el tratamiento de datos personales con la **Ley N.º 29733, Ley 
 - **Principio de seguridad**: el responsable debe aplicar medidas técnicas y organizativas proporcionales al riesgo (cifrado, control de acceso, auditoría, formación).
 - **Finalidad y proporcionalidad**: los datos se usan solo para calcular y explicar el score. La fecha de nacimiento se guarda cifrada y la aplicación **nunca la descifra**, porque el modelo no usa la edad.
 - **Derechos ARCO** (Acceso, Rectificación, Cancelación, Oposición): el panel implementa el derecho de acceso: el cliente ve sus datos tal como están guardados y quién accedió a ellos.
-- **Notificación de incidentes**: con el nuevo reglamento, un incidente que exponga grandes volúmenes de datos, datos sensibles o que afecte a muchas personas se notifica a la **Autoridad Nacional de Protección de Datos Personales en un máximo de 48 horas** desde que se conoce, y si ocurre en el entorno digital también al **Centro Nacional de Seguridad Digital** (sección 9).
+- **Tratamiento objetivo** (art. 87): el titular tiene derecho a no ser objeto de decisiones que lo afecten de manera significativa basadas solo en un tratamiento automatizado que evalúe, sin intervención humana, su situación económica o su fiabilidad. El modelo calcula el score, pero aprobar o rechazar lo decide un analista (RF-09), y el cliente ve de dónde sale cada punto (RF-03).
+- **Notificación de incidentes** (art. 34): con el nuevo reglamento, un incidente que exponga grandes volúmenes de datos, datos sensibles o que afecte a muchas personas se notifica a la **Autoridad Nacional de Protección de Datos Personales en un máximo de 48 horas** desde que se conoce, y si ocurre en el entorno digital también al **Centro Nacional de Seguridad Digital** (sección 9).
+- **Evaluación de impacto** (art. 40): es facultativa, pero el reglamento la recomienda sobre todo para datos sensibles, perfiles y grandes volúmenes, y CrediFácil reúne los tres. La sección 14 es esa evaluación.
 
 ### 2.2 Estándares de referencia
 
@@ -119,6 +123,7 @@ No buscamos una certificación, pero usamos estándares internacionales como lis
 | Concientización y formación (8) | 6.3 Concienciación, educación y formación | |
 | Privacidad por diseño | 5.34 Privacidad y protección de datos personales | Ley 29733 y D.S. 016-2024-JUS |
 | Privacidad diferencial en los agregados (6.8) | 5.34 Privacidad y protección de datos personales · 8.11 Enmascaramiento de datos | Dwork y Roth (2014); `diffprivlib` |
+| Evaluación de impacto, DPIA (14) | 5.34 Privacidad y protección de datos personales | D.S. 016-2024-JUS, art. 40; NTP-ISO/IEC 27005 y NTP-ISO 31000; WP248 rev.01; plantilla del ICO |
 
 ### 2.3 Trasfondo ético: scoring alternativo y discriminación por proxy
 
@@ -549,16 +554,20 @@ Lo que el sistema **todavía no** cubre, con su justificación:
 | Riesgo residual | Mitigación actual | Recomendación | Por qué no ahora |
 |---|---|---|---|
 | Los backups cifrados viven en el mismo servidor | Cifrado AES-256-GCM, llave aparte | Copia diaria fuera del sitio (regla 3-2-1) | Sin almacenamiento externo en un proyecto académico |
+| El schema `raw` guarda los CSV en claro en el servidor | La app no tiene acceso y los backups van cifrados | Borrarlo después de cargar `core` y entrenar, o cifrar el disco del servidor | El entrenamiento del score lee sus variables de `raw` |
 | La llave de pgcrypto está en `.env` y viaja en el texto SQL | Logs silenciados; llave distinta a la de backups | Gestor de llaves (KMS/HSM) o cifrar en la aplicación | Requiere infraestructura en la nube |
 | La llave privada de la CA está en el mismo equipo que el servidor | Fuera de git | Guardar la CA fuera de línea y firmar solo cuando haga falta; en producción, una CA pública (Let's Encrypt) | La CA propia es un requisito del curso |
 | Sin segundo factor para el personal | Argon2id, bloqueo, límite por IP | **MFA** (TOTP o WebAuthn) para analistas y admins | Alcance de tiempo |
-| No hay registro del consentimiento escrito para el ingreso | Dataset histórico | Registrar el consentimiento (y su fecha) en el formulario de solicitud | Los datos ya vienen del dataset |
+| No hay registro del consentimiento escrito para el ingreso | Dataset histórico | Registrar el consentimiento (y su fecha) en el formulario de solicitud, junto con el aviso del art. 6.1, que incluye informar que hay decisiones automatizadas | Los datos ya vienen del dataset |
 | El límite de intentos por IP vive en memoria | Funciona con una instancia | Almacén compartido (Redis) al escalar | Una sola instancia |
 | No hay alertas automáticas | El admin revisa el panel de 24 h | Enviar la auditoría a un SIEM con alertas | Sin infraestructura de monitoreo |
 | Dependencias sin escaneo automático | Versiones mínimas fijadas | `pip-audit`, `npm audit` y escaneo de secretos en CI | No se configuró CI de seguridad |
 | Sin WAF ni pruebas externas | Controles de la sección 6 | WAF delante de la app y pentest anual independiente | Sin exposición pública ni presupuesto |
-| Obligaciones formales ante la ANPD | Diseño alineado a la ley | Registrar el banco de datos y designar un Oficial de Datos Personales | Empresa ficticia |
+| Obligaciones formales ante la ANPD | Diseño alineado a la ley | Registrar el banco de datos y designar un Oficial de Datos Personales, obligatorio cuando el giro del negocio es tratar datos sensibles (art. 37.1) | Empresa ficticia |
 | Scoring con datos descifrados en el servidor | Se descifra lo mínimo y solo para el titular | Cifrado homomórfico o enclaves seguros | Costo y complejidad frente al beneficio |
+| Efecto dispar por edad: es apto el 54% de quienes tienen de 20 a 29 años, frente al 88% de quienes tienen 60 o más | La edad no se usa; el efecto se midió y se explica (14.5) | Medir la razón de aprobación por edad y por género en cada reentrenamiento, con alerta si baja de 0,8, y probar tramos de estabilidad que premien la regularidad sin exigir años | Reducir la brecha cambia el riesgo aceptado: es una decisión de negocio y ética que necesita datos de clientes reales |
+| La privacidad diferencial está evaluada, pero no desplegada en la app | Los agregados que muestra la app salen de 307 507 personas | Publicarlos con ruido de Laplace (ε = 1), calculados una vez por periodo (6.8) | Se priorizó elegir ε con evidencia antes de cambiar un backend ya probado |
+| La fecha de nacimiento se guarda aunque la app no la usa | Cifrada y nunca descifrada (6.2) | Guardar solo un indicador de mayoría de edad, y la edad en un entorno aparte para auditar la equidad (14.4) | El schema `core` y sus pruebas dependen de esa columna |
 
 ---
 
@@ -617,6 +626,8 @@ El primer día se escribió una guía (el `README.md` del repositorio) que fijó
 | 21-sep | Scorecard (paso 3); backend con login seguro, RBAC y auditoría; frontend del panel | Jyns |
 | 22-sep | Cifrado AES-256 en el pipeline, panel del analista, backup/restore, pruebas y primer borrador del informe | Joaquin |
 | 24-sep | Backups cifrados, migración a AES-256, pruebas de integración de seguridad, demo en GitHub Pages e informe final | Jyns |
+| 23-nov | Privacidad diferencial: notebook con `diffprivlib`, barrido de ε y sección 6.8 | Joaquin |
+| 26-nov | Revisión cruzada de la sección 6.8, DPIA (sección 14) con la medición de equidad por género y edad, presentación y guion de la demo | Jyns |
 
 ### 12.3 Qué cambió respecto al plan
 
@@ -651,14 +662,174 @@ El primer día se escribió una guía (el `README.md` del repositorio) que fijó
 
 ### 13.3 Retrospectiva del equipo
 
-- **División del trabajo.** Joaquin: guía inicial, análisis y limpieza de datos, diccionario, pasos 1 y 2 del pipeline, corrección a AES-256, panel del analista, primer backup, pruebas y primer borrador del informe. Jyns: scorecard, backend y frontend, backups cifrados, migración a AES-256, pruebas de integración, demo y publicación. La división por capas funcionó porque cada uno documentó lo suyo, pero dejó puntos ciegos en los bordes. El AES-128 del pipeline se detectó al construir la web, pero quedó como una nota en un README en vez de una tarea asignada: se corrigió en el código al día siguiente, y las filas ya cargadas siguieron en AES-128 hasta la migración final. El backup tampoco se revisó desde seguridad hasta el final.
-- **Coordinación.** Trabajamos de forma asíncrona y por relevos sobre la misma rama. Fue rápido, pero sin revisión cruzada. En el próximo proyecto, cada cambio pasa por un *pull request* aprobado por el otro integrante, con las pruebas de seguridad corriendo en CI.
+- **División del trabajo.** Joaquin: guía inicial, análisis y limpieza de datos, diccionario, pasos 1 y 2 del pipeline, corrección a AES-256, panel del analista, primer backup, pruebas y primer borrador del informe. Jyns: scorecard, backend y frontend, backups cifrados, migración a AES-256, pruebas de integración, demo y publicación. En la entrega final, Joaquin implementó y evaluó la privacidad diferencial (6.8) y Jyns elaboró la DPIA (14) y la presentación. La división por capas funcionó porque cada uno documentó lo suyo, pero dejó puntos ciegos en los bordes. El AES-128 del pipeline se detectó al construir la web, pero quedó como una nota en un README en vez de una tarea asignada: se corrigió en el código al día siguiente, y las filas ya cargadas siguieron en AES-128 hasta la migración final. El backup tampoco se revisó desde seguridad hasta el final.
+- **Coordinación.** Trabajamos de forma asíncrona y por relevos sobre la misma rama. Fue rápido, pero sin revisión cruzada. En el próximo proyecto, cada cambio pasa por un *pull request* aprobado por el otro integrante, con las pruebas de seguridad corriendo en CI. En la entrega final ya lo aplicamos: cada sección nueva la revisa el otro integrante antes de publicarse, y la primera revisión ya encontró errores reales (14.3).
 - **Uso de IA generativa.** El enunciado lo permite y lo usamos como apoyo para programar y documentar. La lección es la misma que con cualquier fuente: todo lo generado se verificó con pruebas y ejecutándolo sobre los datos reales. El caso del AES-128 muestra que una afirmación plausible no reemplaza la verificación.
 - **Si tuviéramos una semana más**: copia de los backups fuera del servidor, MFA para el personal, registro del consentimiento para el ingreso, pruebas de seguridad en CI y todo empaquetado con Docker.
 
 ---
 
-## 14. Fuentes
+## 14. Evaluación de impacto en la protección de datos (DPIA)
+
+El reglamento define la evaluación de impacto como el mecanismo de responsabilidad proactiva por el que el responsable analiza, **antes** de tratar los datos, el impacto y los riesgos de ese tratamiento (art. III, num. 13). Esta sección es esa evaluación para CrediFácil. Sigue los siete pasos de la plantilla de DPIA del ICO (la misma del Lab 11) y califica cada riesgo por probabilidad y severidad, como sugiere el art. 40.2 al remitir a la NTP-ISO/IEC 27005 y a la NTP-ISO 31000. Donde el contenido ya está en otra sección, la cita en vez de repetirlo.
+
+| Ficha | |
+|---|---|
+| Tratamiento | Scoring crediticio explicable: carga y cifrado de las solicitudes, cálculo del score, panel del cliente y panel interno |
+| Responsable | CrediFácil (empresa ficticia del proyecto) |
+| Elaboración | Jyns Ordóñez, 26 de noviembre de 2026 (versión 1.0) |
+| Revisión cruzada | Joaquin Salazar (14.3) |
+| Próxima revisión | Noviembre de 2027, o antes si cambia el tratamiento (14.7) |
+
+### 14.1 Paso 1: Necesidad de la evaluación
+
+El reglamento la hace facultativa, pero la recomienda «especialmente» cuando hay datos sensibles, perfiles personales o grandes volúmenes (art. 40.1). CrediFácil tiene los tres. Además, haberla implementado antes de un procedimiento sancionador cuenta como atenuante (art. 125.4). Las directrices europeas sobre DPIA (WP248 rev.01) dan nueve criterios de alto riesgo y la recomiendan cuando se cumplen dos o más:
+
+| Criterio (WP248) | ¿Aplica? | Por qué |
+|---|---|---|
+| Evaluación o puntuación | **Sí** | El score predice la fiabilidad de pago a partir de la situación económica: es la definición de perfil del reglamento (art. III, num. 11) |
+| Decisión automatizada con efecto significativo | **En parte** | El modelo calcula el score; aprobar o rechazar lo decide un analista (RF-09) |
+| Observación sistemática | No | No se sigue el comportamiento del cliente |
+| Datos sensibles | **Sí** | El ingreso es dato sensible (Ley 29733, art. 2, num. 5) |
+| Gran escala | **Sí** | 307 507 solicitantes y 1,7 millones de créditos en otras entidades (1.2) |
+| Combinación de conjuntos de datos | **Sí** | Solicitud más historial en el bureau |
+| Interesados vulnerables | **En parte** | El segmento objetivo está fuera del sistema financiero (1.1) y necesita el crédito: hay un desequilibrio de poder |
+| Uso innovador de tecnología | No | Un scorecard es una técnica establecida |
+| Impide acceder a un servicio o contrato | **Sí** | Un rechazo deja a la persona sin crédito |
+
+**Conclusión**: se cumplen cinco criterios y dos en parte, cuando dos ya bastan. El tratamiento es de alto riesgo inherente y la evaluación es necesaria.
+
+### 14.2 Paso 2: Descripción del tratamiento
+
+**Naturaleza.** Cómo se recogen, usan, guardan y borran los datos:
+
+| Etapa | Qué pasa | Detalle |
+|---|---|---|
+| Origen | Solicitudes de crédito e historial en otras entidades. En el proyecto, el dataset público de Home Credit, sin nombres ni documentos | 1.2 |
+| Carga | Los CSV pasan tal cual al schema `raw`, que la app no puede leer | 11.1 |
+| Transformación | Copia a `core` con el ingreso, la fecha de nacimiento y la deuda cifrados con AES-256 | 6.2 |
+| Uso | Cálculo del score (9 factores en 3 pilares) y su explicación al titular | 11.2 |
+| Acceso | Cliente: lo suyo; analista: score y alias; admin: además, la auditoría | 3.1, 6.4 |
+| Destinatarios | Nadie fuera de CrediFácil: no hay encargados, transferencias ni venta de datos | 14.4 |
+| Conservación | Backups de 7 días; propuesta: anonimizar las solicitudes rechazadas a los 12 meses y guardar la auditoría 2 años | 8.1 (P5) |
+
+**Alcance.** Los datos clasificados en la sección 5.2: sensibles (ingreso, fecha de nacimiento, deuda externa, detalle del score, contraseñas), confidenciales (montos, historial en el bureau, IP de la auditoría) e internos (score por alias, decisiones). No se tratan datos de salud, biométricos ni de menores. Son 307 507 personas; cada solicitud se puntúa una vez y se consulta bajo demanda.
+
+**Contexto.** El cliente pide un microcrédito porque lo necesita, así que no negocia en igualdad de condiciones. Espera que su ingreso se use para evaluarlo, no para otra cosa. La preocupación pública conocida es la discriminación algorítmica en el crédito (2.3), y la técnica elegida, un scorecard de tramos, es la que permite explicar cada punto.
+
+**Propósitos.** Para CrediFácil, estimar el riesgo de atraso. Para el cliente, acceder a crédito sin historial y saber qué cambiar para ser apto. Para la sociedad, la inclusión financiera (OKR O2, sección 1.4).
+
+### 14.3 Paso 3: Consulta
+
+| Con quién | Cómo | Resultado |
+|---|---|---|
+| Equipo | Revisión cruzada: Jyns revisó la sección 6.8 y su notebook, y Joaquin revisa esta DPIA | Cinco correcciones, abajo |
+| Titulares de los datos | No es posible: los datos son históricos y la empresa es ficticia | Se compensa con transparencia por diseño (RF-03, RF-06, RF-07). Antes de lanzar: entrevistas con trabajadores informales sobre el panel y el aviso de privacidad |
+| Seguridad | Pruebas que atacan la aplicación y la base (7) | 51 de 51 pasan; falta un pentest externo (10) |
+| Autoridad (ANPD) | La consulta previa no es obligatoria | Para una empresa real: inscribir el banco de datos y designar al Oficial de Datos Personales (10) |
+
+**Hallazgos de la revisión cruzada**, ya corregidos. Los cuatro primeros, en la sección 6.8 y en el notebook, que se volvió a ejecutar de punta a punta con los mismos resultados:
+
+1. Los montos se presentaban en soles, pero el dataset usa sus propias unidades monetarias (u.m.), como ya decía el panel.
+2. El error del grupo grande (~94 u.m. con cualquier ε) se atribuía al ruido. Es el sesgo de recortar a los bounds; el ruido con ε = 1 es de 4,4 u.m.
+3. Faltaba la contabilidad del presupuesto: con ruido nuevo en cada consulta, promediar muchas respuestas lo anula. Ahora los agregados se publican una vez y se explica la composición.
+4. La tasa de atraso por edad no podría publicarse sin descifrar la fecha de nacimiento, que la app nunca descifra (RS-13). Queda como prueba del mecanismo.
+5. Una cifra del informe no coincidía con la fuente de verdad ni con la demo: la aprobación sin historial del modelo tradicional figuraba como 65,0%, y `core.modelo_scorecard` dice 64,3%. Se corrigió en el informe y en los README. Es el mismo problema de "cifras copiadas a mano" de la sección 13.2.
+
+### 14.4 Paso 4: Necesidad y proporcionalidad
+
+| Pregunta | Respuesta | Sección |
+|---|---|---|
+| ¿Cuál es la base legal? | El consentimiento del titular, **por escrito** para el ingreso por ser dato sensible. El prototipo no lo registra porque los datos son históricos: es condición para tratar datos reales (14.7) | 2.1, 10 |
+| ¿El tratamiento logra su fin? | Sí: AUC de 0,725 y 5,0% de atrasos entre aprobados, bajo la meta de 10% | 1.4 |
+| ¿Hay una forma menos invasiva? | El modelo usa 9 factores. Se excluyeron los atributos protegidos y sus proxies, y esa decisión cuesta 0,014 de AUC | 11.2 |
+| ¿Cada dato guardado tiene un uso? | Todos menos uno: la fecha de nacimiento se guarda cifrada, pero la app nunca la descifra. Solo se justifica para comprobar la mayoría de edad al contratar y para auditar el efecto del score por edad (14.5). La medida es guardar solo un indicador de mayoría de edad | 6.2, 10 |
+| ¿Cómo se evita usarlos para otro fin? | Finalidad única y declarada; RBAC y permisos por columna impiden que la app lea otra cosa; los agregados publicados llevan ruido | 2.1, 6.4, 6.8 |
+| ¿Los datos son de calidad? | Limpieza documentada (valores centinela, percentil 99) y neutralidad ante la ausencia de historial | 11.1, 11.2 |
+| ¿Qué se le informa al titular? | Cada punto de su score, las variables excluidas y por qué, y quién accedió a sus datos. Falta el aviso del art. 6.1, que obliga a informar si hay decisiones automatizadas y perfiles (num. 8) | 3.1, 10 |
+| ¿Puede ejercer sus derechos? | Acceso en autoservicio; rectificación, cancelación y oposición por un canal formal. Tratamiento objetivo (art. 87): la decisión no es solo automatizada, porque la toma un analista, y el cliente ve de dónde sale su score | 2.1, 8.2 |
+| ¿Hace falta un Oficial de Datos Personales? | Sí, para una CrediFácil real: su negocio principal es tratar datos sensibles (art. 37.1, num. 3) | 10 |
+| ¿Hay encargados o transferencias internacionales? | No: todo corre en un servidor propio. Si se pasa a la nube, aplican las reglas de flujo transfronterizo | — |
+
+**Criterio para excluir variables** (precisa el de la sección 11.2): una variable sale del modelo si está correlacionada con un atributo protegido **y** no tiene una relación legítima con la capacidad de pago. La antigüedad del documento (r = 0,27 con la edad) y la del registro (r = 0,33) salieron porque solo dicen cuándo se hizo un trámite. Los años de empleo se quedaron aunque se correlacionan algo más (r = 0,35), porque miden estabilidad laboral, que sí explica el pago. Lo que cuesta esa decisión se mide en el paso 5.
+
+### 14.5 Paso 5: Riesgos
+
+Cada riesgo se describe como daño para la persona. La probabilidad es remota, posible o probable; la severidad, mínima, significativa o severa. El nivel inherente (antes de los controles) es **alto** si es probable y al menos significativo, o posible y severo; **medio** si es posible y significativo, probable y mínimo, o remoto y severo; **bajo** en los demás casos. Las amenazas técnicas vienen del análisis STRIDE (4.3); se suman los riesgos de licitud, transparencia y equidad, que no son ataques.
+
+| ID | Riesgo para la persona | Origen | Probabilidad | Severidad | Nivel inherente |
+|---|---|---|---|---|---|
+| R1 | Alguien entra a la cuenta de un cliente o de un empleado y ve o cambia datos | Suplantación (S) | Probable | Significativa | Alto |
+| R2 | Un cliente ve los datos de otro, o un usuario sube sus privilegios | IDOR, elevación (E) | Posible | Severa | Alto |
+| R3 | Un empleado ve ingresos o identidades que no necesita | Fuga interna (I) | Probable | Significativa | Alto |
+| R4 | Roban la base o un backup, con ingresos y deudas | Fuga (I) | Posible | Severa | Alto |
+| R5 | Interceptan el tráfico (credenciales, ingreso) | Fuga (I) | Posible | Significativa | Medio |
+| R6 | Alteran datos, decisiones o la auditoría para ocultar un abuso | Manipulación (T), repudio (R) | Posible | Significativa | Medio |
+| R7 | Se filtra una llave y lo cifrado queda expuesto | Fuga (I), error humano | Posible | Severa | Alto |
+| R8 | Reidentifican a alguien combinando agregados publicados | Fuga (I) | Posible | Significativa | Medio |
+| R9 | El score discrimina por un atributo protegido a través de un proxy | Equidad | Probable | Severa | Alto |
+| R10 | No tener historial se castiga y se reproduce la exclusión | Equidad | Probable | Significativa | Alto |
+| R11 | La decisión es opaca y nadie la revisa | Transparencia (art. 87) | Probable | Significativa | Alto |
+| R12 | Se trata el ingreso sin consentimiento escrito ni aviso de decisiones automatizadas | Licitud (art. 6) | Probable | Significativa | Alto |
+| R13 | Los datos se guardan más de lo necesario o se usan para otro fin | Proporcionalidad | Posible | Significativa | Medio |
+| R14 | Se pierden los datos o el servicio deja de responder (falla, *ransomware*, inundación del login) | Disponibilidad (D) | Posible | Significativa | Medio |
+| R15 | Un incidente no se detecta o se notifica tarde, y los afectados no pueden protegerse | Respuesta (art. 34) | Posible | Significativa | Medio |
+
+**R9, medido para esta DPIA** sobre las 307 507 solicitudes, con el umbral de 580 puntos. El género y la edad se usan solo para medir, nunca para decidir:
+
+| Grupo | Aprobados | Atrasos en el grupo | Atrasos entre aprobados |
+|---|---|---|---|
+| Mujeres | 76,2% | 7,0% | 4,3% |
+| Hombres | 72,9% | 10,1% | 6,3% |
+| 20 a 29 años | 54,0% | 11,4% | 6,3% |
+| 30 a 39 años | 71,3% | 9,6% | 5,7% |
+| 40 a 49 años | 78,7% | 7,6% | 4,9% |
+| 50 a 59 años | 83,0% | 6,1% | 4,2% |
+| 60 años o más | 87,8% | 4,9% | 3,9% |
+
+- **Género**: la razón entre las tasas de aprobación (hombres / mujeres) es 0,96, por encima de 0,8, el umbral de la regla de los cuatro quintos. No hay un efecto dispar relevante.
+- **Edad**: la razón entre el grupo de 20 a 29 años y el de 60 o más es **0,62**, por debajo de 0,8. El modelo no usa la edad, pero dos pilares acumulan años: en estabilidad (años de empleo y con el mismo teléfono) el grupo joven saca 31 puntos menos, y en historial (score externo y antigüedad del historial), 34 menos. No se debe a la falta de historial: lo tiene el 80% de los jóvenes y el 85% de los mayores. El riesgo observado también es distinto (11,4% de atrasos frente a 4,9%), y entre los aprobados los jóvenes se atrasan más (6,3% frente a 3,9%): el modelo no es más severo con ellos de lo que indica su riesgo. Aun así, la diferencia de acceso es grande y queda como riesgo residual medio.
+
+### 14.6 Paso 6: Medidas y riesgo residual
+
+| Riesgo | Medidas (sección) | Efecto | Residual | ¿Aprobada? |
+|---|---|---|---|---|
+| R1 | Argon2id, bloqueo tras 5 fallos, límite por IP, mensaje único, sesiones `__Host-` que expiran (6.3) | Reducido | Medio: sin MFA para el personal | Sí; MFA planificado (10) |
+| R2 | RBAC en cada endpoint, ningún ID en la URL, rol de BD sin acceso a `raw` (6.4); probado (7.1) | Reducido | Bajo | Sí |
+| R3 | El analista ve alias y score, nunca el ingreso; permisos por columna; auditoría de cada acceso (6.4, 6.6); políticas P2 y P3 (8.1) | Reducido | Bajo | Sí |
+| R4 | AES-256 por columna (6.2), backups AES-256-GCM (6.7), llaves separadas (5.4) | Reducido | Medio: el schema `raw` sigue en claro en el servidor y los backups viven en el mismo equipo | Sí; copia externa y retiro de `raw` planificados (10) |
+| R5 | Solo HTTPS, TLS 1.2+ con secreto perfecto hacia adelante, HSTS (6.1) | Reducido | Bajo | Sí |
+| R6 | MDC de OpenPGP, tag GCM, auditoría de solo inserción, anti-CSRF (6.2, 6.5, 6.6, 6.7) | Reducido | Bajo | Sí |
+| R7 | Una llave por propósito, fuera del repositorio y de los logs (5.4); rotación (8.2) | Reducido | Medio: llaves en `.env`, sin KMS | Sí; KMS planificado (10) |
+| R8 | Alias HMAC, score redondeado e ingreso de otros solo cifrado (6.4); privacidad diferencial con ε = 1 y grupos de ~500 personas o más (6.8) | Reducido | Bajo | Sí; despliegue de la DP planificado (10) |
+| R9 | Sin atributos protegidos ni proxies sin relación con el pago (11.2, 14.4); medición por género y edad (14.5) | Reducido | **Medio**, por la edad | Sí; monitoreo en cada reentrenamiento, con alerta bajo 0,8 (10) |
+| R10 | Neutralidad ante la ausencia de historial (11.2) | Reducido | Bajo: aprueba al 67,3% sin historial, frente al 64,3% del modelo tradicional | Sí |
+| R11 | Cada punto explicado (RF-03), plan para ser apto (RF-04), decisión del analista (RF-09) | Reducido | Bajo | Sí |
+| R12 | Ninguna en el prototipo: usa datos públicos e históricos, sin clientes reales | Aceptado solo en el prototipo | Alto con datos reales | Condición 1 (14.7) |
+| R13 | Finalidad única, retención P5 (8.1), la fecha de nacimiento nunca se descifra (6.2) | Reducido | Medio: solo los backups se purgan solos, y la fecha se guarda sin uso | Sí; indicador de mayoría de edad planificado (10) |
+| R14 | Backup diario cifrado y restauración probada en 16 s (6.7); límite de intentos por IP (6.3) | Reducido | Medio: sin copia fuera del servidor | Sí; copia externa planificada (10) |
+| R15 | Auditoría y panel de 24 h (6.6); plan con el plazo de 48 h (9) | Reducido | Medio: sin alertas automáticas | Sí; SIEM planificado (10) |
+
+### 14.7 Paso 7: Decisión y firmas
+
+**Decisión: el tratamiento puede continuar como prototipo.** De los 15 riesgos, 7 quedan en nivel bajo y 7 en medio, todos con una medida planificada en la sección 10. El restante (R12) sería alto con datos reales. Por eso, antes de tratar datos de clientes reales deben cumplirse cuatro condiciones:
+
+1. Consentimiento por escrito para el ingreso y el aviso del art. 6.1, incluida la existencia de decisiones automatizadas (R12).
+2. Designar al Oficial de Datos Personales (art. 37.1) e inscribir el banco de datos ante la ANPD.
+3. MFA para el personal, copia de los backups fuera del servidor, llaves en un KMS y retiro del schema `raw` (R1, R4, R7, R14).
+4. Monitorear la razón de aprobación por edad y por género en cada reentrenamiento (R9).
+
+| Paso 7 (plantilla del ICO) | Quién | Fecha | Notas |
+|---|---|---|---|
+| Medidas aprobadas por | Jyns Ordóñez | 26-nov-2026 | Las de 14.6 |
+| Riesgos residuales aceptados por | Jyns Ordóñez | 26-nov-2026 | Siete medios; R12, condicionado a la condición 1 |
+| Revisión cruzada y aprobación | Joaquin Salazar | *pendiente* | Aprueba también las medidas y los riesgos residuales |
+| Opinión del Oficial de Datos Personales | No designado | — | Empresa ficticia; designarlo es la condición 2 |
+| Revisión periódica | Equipo del proyecto | Nov-2027 | Antes, si cambia el modelo, se agrega un dato, se pasa a la nube o hay un incidente (9) |
+
+---
+
+## 15. Fuentes
 
 - Home Credit Default Risk (Kaggle): <https://www.kaggle.com/c/home-credit-default-risk/data>
 - Ley N.º 29733, Ley de Protección de Datos Personales: <https://www.leyes.congreso.gob.pe/documentos/leyes/29733.pdf>
@@ -681,6 +852,10 @@ El primer día se escribió una guía (el `README.md` del repositorio) que fijó
 - Oficina del Censo de EE. UU. (2021). *La privacidad diferencial y el Censo 2020* (hoja informativa oficial en español): <https://www.census.gov/content/dam/Census/library/factsheets/2021/differential-privacy-and-the-2020-census-spanish.pdf>
 - Tang, J. et al. (2017). *Privacy Loss in Apple's Implementation of Differential Privacy on MacOS 10.12*: <https://arxiv.org/abs/1709.02753>
 - Dwork, C. y Roth, A. (2014). *The Algorithmic Foundations of Differential Privacy*: <https://www.cis.upenn.edu/~aaroth/Papers/privacybook.pdf>
+- Decreto Supremo N.º 016-2024-JUS, texto oficial (arts. III, 6, 34, 37, 40, 87 y 125): <https://www.smv.gob.pe/Uploads/DS016_2024_JUS.pdf>
+- Grupo de Trabajo del Artículo 29 (2017). *Directrices sobre la evaluación de impacto relativa a la protección de datos (WP248 rev.01)*, versión en español de la AEPD: <https://www.aepd.es/documento/wp248rev01-es.pdf>
+- ICO, *How do we do a DPIA?* (incluye la plantilla de siete pasos): <https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/accountability-and-governance/data-protection-impact-assessments-dpias/how-do-we-do-a-dpia>
+- Regla de los cuatro quintos para medir efecto dispar, 29 CFR 1607.4(D): <https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XIV/part-1607/section-1607.4>
 
 ---
 

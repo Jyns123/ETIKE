@@ -140,7 +140,7 @@ Resultados del scorecard (con los datos limpios): AUC 0.725 sin variables sensib
 
 Publicado en **https://jyns123.github.io/ETIKE/**:
 
-- `/`: el informe completo (motivación, trasfondo teórico, requerimientos, diseño, implementación, plan de respuesta a incidentes, recomendaciones futuras, planificación y retrospectiva). Fuente: [`docs/index.md`](docs/index.md) (Jekyll).
+- `/`: el informe completo (motivación, trasfondo teórico, requerimientos, diseño, implementación, privacidad diferencial, plan de respuesta a incidentes, recomendaciones futuras, planificación, retrospectiva y la evaluación de impacto, DPIA, en la sección 14). Fuente: [`docs/index.md`](docs/index.md) (Jekyll).
 - `/demo/`: versión estática del panel, sin backend: respuestas reales del backend exportadas para las cuentas demo (contraseña `demo`). Ver `web/README.md`, "Demo estática".
 
 Lo publica el workflow [`.github/workflows/pages.yml`](.github/workflows/pages.yml) en cada push a `main` (en un PR solo compila). En `Settings` → `Pages` la fuente debe ser **GitHub Actions**.
